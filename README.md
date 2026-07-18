@@ -13,11 +13,12 @@ A data-driven, risk-aware financial decision support system that forecasts stock
 |-- docs/
 |   `-- entregas/
 |       |-- 01_ideas_producto.md      # Deliverable 1 — Product ideas explored
-|       `-- 02_datos_necesarios.md    # Deliverable 2 — Selected idea & data requirements
-|-- data/                             # (from Deliverable 3 onwards)
-|   |-- raw/                          # Immutable source snapshots
-|   |-- processed/                    # Cleaned / intermediate data
-|   `-- gold/                         # Final model-ready datasets
+|       |-- 02_datos_necesarios.md    # Deliverable 2 — Selected idea & data requirements
+|       `-- 03_modelo_datos.md        # Deliverable 3 — Data model & gold layer design
+|-- data/
+|   |-- raw/                          # Immutable source snapshots (CSV, as downloaded)
+|   |-- processed/                    # Cleaned, standardized tables (CSV)
+|   `-- gold/                         # Model-ready datasets (Parquet) — the data contract
 `-- README.md
 ```
 
@@ -27,8 +28,19 @@ A data-driven, risk-aware financial decision support system that forecasts stock
 |---|---|---|
 | 1 | [Product ideas](docs/entregas/01_ideas_producto.md) | ✅ Delivered |
 | 2 | [Selected idea & data requirements](docs/entregas/02_datos_necesarios.md) | ✅ Delivered |
-| 3 | Data model & gold layer | 🔜 |
+| 3 | [Data model & gold layer](docs/entregas/03_modelo_datos.md) | ✅ Delivered |
 | 4 | Analysis design & modeling strategy | 🔜 |
+
+## Data architecture (Deliverable 3)
+
+Three-layer flat-file design — **CSV** for `raw/` and `processed/` (transparent, auditable), **Parquet** for `gold/` (typed schema, consumed by code). No database: ~35k rows total makes one unjustifiable.
+
+The gold layer is a two-dataset **data contract**:
+
+| Gold dataset | Granularity | Role |
+|---|---|---|
+| `gold_market_daily.parquet` | One row per (date, ticker) · ~16,000 rows | **Model input** — adjusted prices, log returns (target), lags, rolling volatility, VIX & Treasury regressors |
+| `gold_signals_daily.parquet` | One row per (date, ticker) | **Model output** — expected return, forecast volatility, risk level, BUY/SELL/HOLD signal → consumed by backtest & dashboard |
 
 ## Data sources (all open & free)
 
