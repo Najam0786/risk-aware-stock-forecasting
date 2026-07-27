@@ -11,11 +11,14 @@ A risk-first financial decision support system: its core is rigorous **volatilit
 ```
 .
 |-- docs/
-|   `-- entregas/
-|       |-- 01_ideas_producto.md      # Deliverable 1 — Product ideas explored
-|       |-- 02_datos_necesarios.md    # Deliverable 2 — Selected idea & data requirements (rev.)
-|       |-- 03_modelo_datos.md        # Deliverable 3 — Data model & gold layer design (rev.)
-|       `-- 04_analisis_modelado.md   # Deliverable 4 — Analysis design & modeling strategy (rev.)
+|   |-- entregas/
+|   |   |-- 01_ideas_producto.md      # Deliverable 1 — Product ideas explored
+|   |   |-- 02_datos_necesarios.md    # Deliverable 2 — Selected idea & data requirements (rev.)
+|   |   |-- 03_modelo_datos.md        # Deliverable 3 — Data model & gold layer design (rev.)
+|   |   |-- 04_analisis_modelado.md   # Deliverable 4 — Analysis design & modeling strategy (rev.)
+|   |   `-- 05_diseno_frontal.md      # Deliverable 5 — Frontend design & UX
+|   `-- assets/
+|       `-- 05_mockup_frontal.png     # Main mockup of the RiskLens dashboard
 |-- data/
 |   |-- raw/                          # Immutable source snapshots (CSV) — the frozen data vintage
 |   |-- processed/                    # Cleaned, standardized tables (CSV)
@@ -23,7 +26,7 @@ A risk-first financial decision support system: its core is rigorous **volatilit
 `-- README.md
 ```
 
-All four design documents were revised to incorporate instructor feedback (25 Jul); each carries a revision note describing the changes for traceability.
+Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); each carries a revision note describing the changes for traceability.
 
 ## Deliverables
 
@@ -33,6 +36,13 @@ All four design documents were revised to incorporate instructor feedback (25 Ju
 | 2 | [Selected idea & data requirements](docs/entregas/02_datos_necesarios.md) | ✅ Delivered · revised per feedback |
 | 3 | [Data model & gold layer](docs/entregas/03_modelo_datos.md) | ✅ Delivered · revised per feedback |
 | 4 | [Analysis design & modeling strategy](docs/entregas/04_analisis_modelado.md) | ✅ Delivered · revised per feedback |
+| 5 | [Frontend design & UX](docs/entregas/05_diseno_frontal.md) | ✅ Delivered |
+
+## Frontend (Deliverable 5) — RiskLens
+
+Single-screen Streamlit dashboard, dark-themed for data-dense monitoring, with a risk-first hierarchy and a numbered workflow: **1 · Configure** (asset, run, audit trail of model/rule versions, data health) → **2 · Risk assessment — core** (risk gauge with historical percentile as the lead number, Bank-of-England-style fan chart with 50/80/95% prediction bands, forecast-vs-realized volatility, risk-regime timeline 2010–today, calibration health) → **3 · Signal & explanation — experimental** (HOLD/BUY/SELL with its threshold margin, grounded generated explanation, backtest equity curves vs buy-and-hold after costs). Exception states (stale data vintage, high-uncertainty HOLD, unvalidated signals) are designed into the UI.
+
+![RiskLens mockup](docs/assets/05_mockup_frontal.png)
 
 ## MVP scope (risk-first)
 
@@ -40,7 +50,7 @@ All four design documents were revised to incorporate instructor feedback (25 Ju
 |---|---|
 | **Core (must have)** | Validated risk system for SPY: GARCH volatility forecasts, low/medium/high risk levels, calibrated 95% prediction intervals, risk explanation layer |
 | **Conditional** | ARIMAX return forecasts + BUY/SELL/HOLD signals — shown as recommendations only if they beat per-asset buy-and-hold out-of-sample after costs; otherwise labeled *experimental information* |
-| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive Streamlit dashboard |
+| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive calibration-report page |
 
 ## Data architecture (Deliverable 3)
 
@@ -81,4 +91,4 @@ Raw downloads are committed to the repository as an immutable, dated vintage —
 
 ## Planned tech stack
 
-Python · pandas · statsmodels (ARIMAX) · arch (GARCH) · Streamlit (dashboard) · CSV/Parquet layered data storage
+Python · pandas · statsmodels (ARIMAX) · arch (GARCH) · Plotly · Streamlit (dashboard) · CSV/Parquet layered data storage
