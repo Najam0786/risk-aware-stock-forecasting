@@ -3,6 +3,8 @@
 **Project:** Risk-Aware Stock Forecasting and Trading Decision Support System
 **Máster en Data Science — Trabajo de Fin de Máster**
 
+> **Revision note (traceability).** Revised after instructor feedback (25 Jul). Changes: (1) the `gold_signals_daily` contract (§4.2) was extended with four temporal-traceability fields — `model_version`, `train_end_date`, `horizon_days`, and `rule_version` — so that every decision row is fully reproducible and auditable: it is possible to identify exactly which model, trained on which data window, under which decision rules, produced each signal, and to verify that no future information was used; (2) the data dictionary (§6) documents the new fields; (3) §4.2 now states explicitly that signals are evaluated against clear baselines including transaction costs, as specified in Deliverable 4. The storage technology, layer structure, and `gold_market_daily` contract are unchanged.
+
 ---
 
 ## 1. Project and Data Summary
@@ -101,7 +103,7 @@ The gold layer consists of **two datasets**: one *input* dataset feeding the mod
 
 | Property | Definition |
 |---|---|
-| Functional description | Model forecasts and trading decisions per asset and day; the interface between the modeling phase and the backtest/dashboard |
+| Functional description | Model forecasts and trading decisions per asset and day, with full temporal traceability; the interface between the modeling phase and the backtest/dashboard |
 | Granularity | **One row per (forecast date, ticker)** |
 | Expected records | One row per test/backtest day per ticker (≈ 1,000–4,000 rows depending on evaluation window) |
 | Primary key | Composite key (`date`, `ticker`) |
@@ -120,7 +122,15 @@ The gold layer consists of **two datasets**: one *input* dataset feeding the mod
 | `risk_level` | category | low / medium / high (volatility bucket) |
 | `signal` | category | **BUY / SELL / HOLD** (rule-based decision) |
 | `pi_lower`, `pi_upper` | float64 | Prediction interval bounds for the return |
-| `run_timestamp` | datetime | When the forecast was generated (reproducibility) |
+| `model_version` | string | Identifier of the exact model configuration that produced the forecast (e.g., `arimax_1.2+garch_1.0`, tied to a repository commit/tag) |
+| `train_end_date` | date | Last date of data included in the training window of the model that produced this row — must always be **strictly before** `date` |
+| `horizon_days` | int8 | Forecast horizon in trading days (1 for the MVP's one-step-ahead design; field kept explicit for auditability and future multi-horizon extensions) |
+| `rule_version` | string | Version of the decision-rule configuration (threshold set `θ_buy`, `θ_sell`, `v_max`) used to map the score to BUY/SELL/HOLD, tied to the calibration record |
+| `run_timestamp` | datetime | When the forecast was generated (execution reproducibility) |
+
+**Temporal traceability guarantee.** The four versioning fields make every decision row a self-contained audit record: `model_version` + `train_end_date` identify *which model, trained on what*, produced the forecast; `horizon_days` states *what was being predicted*; `rule_version` identifies *which rule configuration* converted it into a decision. The invariant `train_end_date < date` is asserted programmatically when writing the file — a machine-checkable proof that no signal was produced by a model that had seen its own evaluation period. Model and rule versions map to repository tags, so any historical decision can be re-generated exactly.
+
+**Evaluation note.** Signals stored in this dataset are never assessed in isolation: they are evaluated against explicit baselines — buy-and-hold of the same asset (primary) and buy-and-hold SPY (market reference) — **including transaction costs**, under the walk-forward protocol specified in Deliverable 4. Forecasting returns and volatility well does not automatically produce profitable decisions; the backtest is what establishes (or refutes) decision-level value.
 
 ## 5. Relationships Between Data
 
@@ -136,7 +146,7 @@ gold_market_daily (date, ticker)  1 ────── 1  gold_signals_daily (da
 
 - **Prices ↔ macro: N:1 on `date`.** Each trading date has 4 price rows (one per ticker) but exactly one macro row (VIX, DGS10, T10Y2Y are market-wide, not per-ticker). The join broadcasts macro values across tickers.
 - **The trading calendar of the price data is the spine.** All other series are aligned *to* it: macro rows on dates when the stock market is closed are dropped; missing macro values on trading days are forward-filled (see §8).
-- **`gold_market_daily` ↔ `gold_signals_daily`: 1:1 on (`date`, `ticker`)** within the evaluation window — every forecast row traces back to exactly one input row, guaranteeing full traceability from decision to data.
+- **`gold_market_daily` ↔ `gold_signals_daily`: 1:1 on (`date`, `ticker`)** within the evaluation window — every forecast row traces back to exactly one input row; together with the versioning fields (§4.2), this guarantees full traceability from any decision back to its data, model, and rules.
 - **Expected join problems:** bond-market holidays differ from stock-market holidays (FRED gaps on trading days); FRED encodes missing values as `"."` strings; CPI is monthly and published with a lag, requiring as-of (not exact-date) alignment; `yfinance` returns timezone-aware timestamps while FRED dates are naive — all dates will be normalized to plain dates before joining.
 
 A more complex relational model (separate dimension/fact tables) is unnecessary: there is a single fact grain (daily per ticker) and the "dimensions" (ticker metadata) are four constant values.
@@ -160,6 +170,10 @@ Core fields relevant to the analysis, model, and dashboard:
 | `signal` | Trading decision | category | Model output | Yes (gold_signals) | BUY / SELL / HOLD only |
 | `expected_return` | Forecasted next-day log return | float64 | Model output | Yes (gold_signals) | Paired with `pi_lower`/`pi_upper` |
 | `forecast_volatility` | Forecasted conditional volatility | float64 | Model output | Yes (gold_signals) | Must be > 0 |
+| `model_version` | Model configuration identifier | string | Model output | Yes (gold_signals) | Maps to a repository tag/commit; enables exact re-generation of the forecast |
+| `train_end_date` | Last training-data date for this forecast | date | Model output | Yes (gold_signals) | Invariant asserted on write: `train_end_date < date` (no look-ahead) |
+| `horizon_days` | Forecast horizon in trading days | int8 | Model output | Yes (gold_signals) | 1 in the MVP; explicit for auditability |
+| `rule_version` | Decision-rule configuration identifier | string | Model output | Yes (gold_signals) | Identifies the frozen (θ_buy, θ_sell, v_max) set from validation calibration |
 
 ## 7. Expected Data Quality Problems (Specific to This Project)
 
@@ -187,16 +201,16 @@ Initial hypotheses (may be refined later, with changes documented for traceabili
 - **Derived variables:** `log_return`, lags 1–5, `roll_mean_21`, `roll_vol_21`, `vix_change`, `dgs10_change`, `day_of_week` — computed in the processed→gold step, per ticker, strictly from past data (no look-ahead in any rolling window).
 - **Aggregations:** none required — the analysis grain equals the source grain (daily). CPI is the only frequency conversion (monthly → daily via as-of).
 - **Discarded data:** intraday fields beyond OHLCV (not needed), pre-2010 history (out of declared scope), raw unadjusted close for modeling (kept in raw only), and any macro series columns other than the declared ones.
-- **Record validity criteria:** a gold row is valid iff `adj_close > 0`, `log_return` is finite, (`date`, `ticker`) is unique, `date` is a NYSE trading day, and all mandatory fields are non-null after the warm-up trim. Rows failing validation are counted and reported by the pipeline, not silently dropped.
+- **Record validity criteria:** a gold row is valid iff `adj_close > 0`, `log_return` is finite, (`date`, `ticker`) is unique, `date` is a NYSE trading day, and all mandatory fields are non-null after the warm-up trim. For `gold_signals_daily`, validity additionally requires all four versioning fields present and `train_end_date < date`. Rows failing validation are counted and reported by the pipeline, not silently dropped.
 
 ## 9. Risks of the Data Model
 
 - **Clearest part:** the price pipeline (raw → clean returns). Yahoo adjusted prices for four ultra-liquid assets are as reliable as free market data gets, and log-return computation is deterministic and easily testable.
 - **Most uncertain part:** the macro alignment logic — the forward-fill rules, holiday handling, and especially the as-of CPI join. These involve subtle leakage risks that require careful implementation and testing.
 - **Most problematic source:** FRED is institutionally rock-solid as a *source*, but its calendar quirks make it the most error-prone at *join time*; `yfinance` is the most fragile at *download time* (unofficial API). Both risks are mitigated by committing immutable raw snapshots, so a source failure never breaks reproducibility.
-- **If the gold layer cannot be built as defined:** the fallback is graceful degradation, not redesign — (1) drop `cpi_yoy` (declared desirable, not essential); (2) drop `t10y2y`, keeping VIX + DGS10 as the exogenous set; (3) in the extreme case, a SPY-only gold table with VIX as the single regressor still supports the full ARIMAX + GARCH + signal + backtest pipeline. The schema and contract remain identical throughout — only columns/tickers shrink.
-- **Simplification alternative:** the two-dataset gold design could collapse to `gold_market_daily` only, with model outputs written as a plain results CSV. This loses the clean model/consumer interface but preserves every deliverable of the MVP.
+- **If the gold layer cannot be built as defined:** the fallback is graceful degradation, not redesign — (1) drop `cpi_yoy` (declared desirable, not essential); (2) drop `t10y2y`, keeping VIX + DGS10 as the exogenous set; (3) in the extreme case, a SPY-only gold table with VIX as the single regressor still supports the full ARIMAX + GARCH + signal + backtest pipeline. The schema and contract remain identical throughout — only columns/tickers shrink. The versioning fields of `gold_signals_daily` are never sacrificed: they are part of the contract's audit guarantee.
+- **Simplification alternative:** the two-dataset gold design could collapse to `gold_market_daily` only, with model outputs written as a plain results CSV. This loses the clean model/consumer interface but preserves every deliverable of the MVP — including, even in that reduced format, the four traceability columns.
 
 ---
 
-*This document corresponds to Deliverable 3. Deliverables 1 and 2 are maintained unchanged in this same directory for traceability.*
+*This document corresponds to Deliverable 3 (revised after instructor feedback — see revision note at top). Deliverables 1 and 2 are maintained in this same directory for traceability.*
