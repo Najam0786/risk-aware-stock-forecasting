@@ -73,7 +73,8 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Zone 3: signal card + EXPERIMENTAL badge, score vs threshold, grounded template explanation, equity curves and strategy table vs buy-and-hold
 - [x] Stale-data banner (shows when the last close is 2+ days old), disclaimer footer, calibration report page
 - [x] Charts follow the dataviz palette (validated on the app surface); tests build every chart and render both pages (31 tests pass)
-- [ ] Deployed to Streamlit Community Cloud; opens in a private window (needs your GitHub push and Streamlit login; `requirements.txt` is ready)
+- [x] Deployed to Streamlit Community Cloud: https://risklensspy.streamlit.app/ (fresh-clone install from `requirements.txt` verified)
+- [ ] Confirm the app opens in a private window without signing in (Share setting must be public)
 - [ ] Optional: extension tickers AAPL/MSFT/JPM (would need per-ticker calibration and a new pre-registration tag)
 
 ## Day 6 — presentation and polish

@@ -23,7 +23,7 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 
 ![RiskLens dashboard](docs/assets/dashboard_final.png)
 
-Run it locally with `uv run streamlit run app/streamlit_app.py`. The design mockup from Deliverable 5 is in [`docs/assets/05_mockup_frontal.png`](docs/assets/05_mockup_frontal.png); its numbers are illustrative, the screenshot above shows real model output.
+**Live app: https://risklensspy.streamlit.app/**. Or run it locally with `uv run streamlit run app/streamlit_app.py`. The design mockup from Deliverable 5 is in [`docs/assets/05_mockup_frontal.png`](docs/assets/05_mockup_frontal.png); its numbers are illustrative, the screenshot above shows real model output.
 
 ## Project structure
 
