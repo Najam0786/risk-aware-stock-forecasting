@@ -11,19 +11,21 @@ A risk-first financial decision support system: its core is rigorous **volatilit
 ```
 .
 |-- docs/
-|   |-- entregas/
-|   |   |-- 01_ideas_producto.md      # Deliverable 1 — Product ideas explored
-|   |   |-- 02_datos_necesarios.md    # Deliverable 2 — Selected idea & data requirements (rev.)
-|   |   |-- 03_modelo_datos.md        # Deliverable 3 — Data model & gold layer design (rev.)
-|   |   |-- 04_analisis_modelado.md   # Deliverable 4 — Analysis design & modeling strategy (rev.)
-|   |   `-- 05_diseno_frontal.md      # Deliverable 5 — Frontend design & UX
-|   `-- assets/
-|       `-- 05_mockup_frontal.png     # Main mockup of the RiskLens dashboard
+|   |-- entregas/                     # Deliverables 1-5 (design documents, unchanged)
+|   |-- IMPLEMENTATION_NOTES.md       # Feedback compliance and design-vs-implementation notes
+|   |-- PROJECT_CHECKLIST.md          # Work plan and status
+|   `-- assets/05_mockup_frontal.png  # Deliverable 5 mockup
+|-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
+|-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
+|-- tests/                            # 31 automated tests
+|-- config/preregistered.json         # Frozen models, thresholds and protocol (tag preregistered-v1)
 |-- data/
-|   |-- raw/                          # Immutable source snapshots (CSV) — the frozen data vintage
+|   |-- raw/                          # Immutable source snapshots + VINTAGE.json (tag vintage-2026-09-19)
 |   |-- processed/                    # Cleaned, standardized tables (CSV)
-|   `-- gold/                         # Model-ready datasets (Parquet) — the data contract
-`-- README.md
+|   `-- gold/                         # gold_market_daily and gold_signals_daily (Parquet)
+|-- reports/                          # EDA, validation, calibration and sealed-test results, figures
+|-- pyproject.toml, uv.lock           # Locked environment (uv, Python 3.12)
+`-- requirements.txt                  # For Streamlit Community Cloud
 ```
 
 Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); each carries a revision note describing the changes for traceability.
@@ -89,6 +91,33 @@ Two coupled forecasting tasks + a transparent decision rule, always measured aga
 
 Raw downloads are committed to the repository as an immutable, dated vintage — the project never depends on live source availability (`yfinance` uses unofficial access that may change).
 
-## Planned tech stack
+*Attribution and terms:* prices and VIX come from Yahoo Finance (via `yfinance`), yields and CPI from FRED (Federal Reserve Bank of St. Louis). The raw files are included only to make this academic project reproducible; check each source's terms of use before any other reuse.
 
-Python · pandas · statsmodels (ARIMAX) · arch (GARCH) · Plotly · Streamlit (dashboard) · CSV/Parquet layered data storage
+## Results (sealed test, 2024-01-02 to 2026-09-18, pre-registered and run once)
+
+| Question | Result |
+|---|---|
+| Are the volatility forecasts calibrated? | Yes. GARCH(1,1)-t 95% intervals cover 95.2% (Kupiec p = 0.85); the joint 50/80/95% fan-chart bands cover 49.5% / 78.7% / 95.3% |
+| Does GARCH beat rolling volatility? | Yes on QLIKE (-8.50 vs -8.36, Diebold-Mariano p = 0.010); the rolling baseline's 95% intervals are rejected (coverage 93.0%, Kupiec p = 0.02) |
+| Do ARIMA/ARIMAX forecast returns better than zero? | No (RMSE 0.00975 vs 0.00980, p = 0.54) |
+| Do the signal strategies beat buy-and-hold SPY after 5 bps costs? | No: Sharpe 0.73 (score rule) and 0.17 (volatility filter) vs 1.27; signals stay labeled EXPERIMENTAL |
+
+Details: `reports/test_results.md`, `reports/model_findings.md`, and `docs/IMPLEMENTATION_NOTES.md` (how the implementation follows the instructor feedback and where it refines the design).
+
+## Tech stack
+
+Python 3.12 · uv · pandas · statsmodels (ARIMA) · arch (GARCH) · Plotly · Streamlit · ruff · pytest · CSV/Parquet layered data storage
+
+## Run it
+
+```
+uv sync
+uv run python -m risklens.clean && uv run python -m risklens.build_gold   # from the frozen raw vintage
+uv run python -m risklens.eda
+uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
+uv run python -m risklens.run_test      # needs tag preregistered-v1 and unchanged frozen files
+uv run streamlit run app/streamlit_app.py
+uv run pytest
+```
+
+`risklens.ingest` re-downloads data and refuses to overwrite the frozen vintage without `--force`.

@@ -78,10 +78,11 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 6 — presentation and polish
 
-- [ ] Slides (~12): problem, decision, data, EDA, models, validation, risk results, return-model result, backtest, live demo, limitations, next steps
-- [ ] Real screenshots and final metrics table in slides
-- [ ] README updated (results, how to run, deliverables table); docs match what was built
-- [ ] One-page results summary
+- [x] Slides (12, English, 15 minutes): problem, approach, data, protocol, EDA, validation, risk results, returns and signals, dashboard, trust, conclusions (published as a private artifact with speaker notes and timings)
+- [x] Real screenshot and final metrics in slides
+- [x] README updated (results, structure, how to run, source attribution); implementation notes added
+- [ ] Rehearse once against the timings in the speaker notes; export the deck to PDF as a backup
+- [ ] One-page results summary (optional)
 
 ## Day 7 — buffer and rehearsal
 
