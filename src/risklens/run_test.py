@@ -225,6 +225,19 @@ def main() -> None:
     GOLD_DIR.mkdir(parents=True, exist_ok=True)
     signals.to_parquet(GOLD_DIR / "gold_signals_daily.parquet", index=False)
 
+    metrics = {
+        "window": [f"{target_dates.min():%Y-%m-%d}", f"{target_dates.max():%Y-%m-%d}"],
+        "n_forecasts": n_eval,
+        "risk": json.loads(risk.to_json(orient="index")),
+        "joint_intervals": json.loads(joint.to_json(orient="index")),
+        "mean": json.loads(mean_table.to_json(orient="index")),
+        "performance": json.loads(perf_table.to_json(orient="index")),
+        "bootstrap": json.loads(boot_table.to_json(orient="index")),
+        "sharpe_by_cost": json.loads(cost_table.to_json(orient="index")),
+        "verdicts": verdicts,
+    }
+    (RESULTS_DIR / "test_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+
     opened = datetime.now(UTC).isoformat(timespec="seconds")
     report = "\n".join(
         [

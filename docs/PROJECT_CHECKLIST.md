@@ -67,12 +67,14 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 5 — Streamlit app
 
-- [ ] App reads only the two gold parquet files (no fitting at runtime)
-- [ ] Zone 1: asset, date, audit trail, data health, protocol cards
-- [ ] Zone 2: risk gauge (expanding percentile), forecast vs realized vol, fan chart 50/80/95, regime timeline, coverage KPI
-- [ ] Zone 3: signal card + EXPERIMENTAL badge, score vs threshold, template explanation, equity curves
-- [ ] Stale-data banner, empty/error states, disclaimer footer
-- [ ] Deployed to Streamlit Community Cloud; opens in a private window
+- [x] App reads only precomputed outputs (gold parquet files, test metrics JSON, config); no fitting at runtime (`app/streamlit_app.py`, `src/risklens/dashboard_data.py`, `charts.py`)
+- [x] Zone 1: asset, date picker, Run forecast, audit trail with look-ahead check, data health, protocol cards
+- [x] Zone 2: risk gauge (percentile), forecast vs realized volatility, fan chart 50/80/95, regime timeline with historical analogue, coverage KPI
+- [x] Zone 3: signal card + EXPERIMENTAL badge, score vs threshold, grounded template explanation, equity curves and strategy table vs buy-and-hold
+- [x] Stale-data banner (shows when the last close is 2+ days old), disclaimer footer, calibration report page
+- [x] Charts follow the dataviz palette (validated on the app surface); tests build every chart and render both pages (31 tests pass)
+- [ ] Deployed to Streamlit Community Cloud; opens in a private window (needs your GitHub push and Streamlit login; `requirements.txt` is ready)
+- [ ] Optional: extension tickers AAPL/MSFT/JPM (would need per-ticker calibration and a new pre-registration tag)
 
 ## Day 6 — presentation and polish
 
