@@ -2,9 +2,28 @@
 
 **Máster en Data Science — Trabajo de Fin de Máster**
 
-A risk-first financial decision support system: its core is rigorous **volatility forecasting and risk explanation** (GARCH, calibrated prediction intervals), complemented by an **experimental return-forecasting and trading-signal layer** (ARIMAX + rule-based BUY/SELL/HOLD) that is promoted to "recommendation" status only if it proves consistent out-of-sample value in cost-adjusted, walk-forward backtesting.
+A risk-first financial decision support system: its core is rigorous **volatility forecasting and risk explanation** (GARCH, calibrated prediction intervals), complemented by an **experimental return-forecasting and trading-signal layer** (ARIMA + rule-based BUY/SELL/HOLD) that is promoted to "recommendation" status only if it proves consistent out-of-sample value in cost-adjusted, walk-forward backtesting. The system is implemented end to end: data pipeline, models, backtest and the **RiskLens** dashboard.
 
 > ⚠️ **Disclaimer:** This is an academic project. Its outputs are probabilistic decision-support prototypes, **not financial advice**. Backtested performance does not guarantee future results.
+
+## Results (sealed test, 2024-01-02 to 2026-09-18, pre-registered and run once)
+
+| Question | Result |
+|---|---|
+| Are the volatility forecasts calibrated? | Yes. GARCH(1,1)-t 95% intervals cover 95.2% (Kupiec p = 0.85); the joint 50/80/95% fan-chart bands cover 49.5% / 78.7% / 95.3% |
+| Does GARCH beat rolling volatility? | Yes on QLIKE (-8.50 vs -8.36, Diebold-Mariano p = 0.010); the rolling baseline's 95% intervals are rejected (coverage 93.0%, Kupiec p = 0.02) |
+| Do ARIMA/ARIMAX forecast returns better than zero? | No (RMSE 0.00975 vs 0.00980, p = 0.54) |
+| Do the signal strategies beat buy-and-hold SPY after 5 bps costs? | No: Sharpe 0.73 (score rule) and 0.17 (volatility filter) vs 1.27; signals stay labeled EXPERIMENTAL |
+
+The risk half of the system is validated; the return and signal half is reported as an honest negative result, which is the fallback planned in Deliverable 4. Details: [`reports/test_results.md`](reports/test_results.md), [`reports/model_findings.md`](reports/model_findings.md), and [`docs/IMPLEMENTATION_NOTES.md`](docs/IMPLEMENTATION_NOTES.md) (how the implementation follows the instructor feedback and where it refines the design).
+
+## RiskLens dashboard
+
+Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure** (asset, date, audit trail of model and rule versions, data health) → **2 · Risk assessment, core** (risk gauge with historical percentile, forecast vs realized volatility, fan chart with 50/80/95% prediction bands, risk-regime timeline 2010 to today, calibration health) → **3 · Signal & explanation, experimental** (BUY/SELL/HOLD with its threshold margin, explanation generated only from displayed numbers, equity curves vs buy-and-hold after costs).
+
+![RiskLens dashboard](docs/assets/dashboard_final.png)
+
+Run it locally with `uv run streamlit run app/streamlit_app.py`. The design mockup from Deliverable 5 is in [`docs/assets/05_mockup_frontal.png`](docs/assets/05_mockup_frontal.png); its numbers are illustrative, the screenshot above shows real model output.
 
 ## Project structure
 
@@ -14,7 +33,7 @@ A risk-first financial decision support system: its core is rigorous **volatilit
 |   |-- entregas/                     # Deliverables 1-5 (design documents, unchanged)
 |   |-- IMPLEMENTATION_NOTES.md       # Feedback compliance and design-vs-implementation notes
 |   |-- PROJECT_CHECKLIST.md          # Work plan and status
-|   `-- assets/05_mockup_frontal.png  # Deliverable 5 mockup
+|   `-- assets/                       # Deliverable 5 mockup and dashboard screenshot
 |-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
 |-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
 |-- tests/                            # 31 automated tests
@@ -28,9 +47,9 @@ A risk-first financial decision support system: its core is rigorous **volatilit
 `-- requirements.txt                  # For Streamlit Community Cloud
 ```
 
-Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); each carries a revision note describing the changes for traceability.
+## Deliverables and implementation
 
-## Deliverables
+Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); each carries a revision note describing the changes for traceability.
 
 | # | Document | Status |
 |---|---|---|
@@ -39,20 +58,15 @@ Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); eac
 | 3 | [Data model & gold layer](docs/entregas/03_modelo_datos.md) | ✅ Delivered · revised per feedback |
 | 4 | [Analysis design & modeling strategy](docs/entregas/04_analisis_modelado.md) | ✅ Delivered · revised per feedback |
 | 5 | [Frontend design & UX](docs/entregas/05_diseno_frontal.md) | ✅ Delivered |
-
-## Frontend (Deliverable 5) — RiskLens
-
-Single-screen Streamlit dashboard, dark-themed for data-dense monitoring, with a risk-first hierarchy and a numbered workflow: **1 · Configure** (asset, run, audit trail of model/rule versions, data health) → **2 · Risk assessment — core** (risk gauge with historical percentile as the lead number, Bank-of-England-style fan chart with 50/80/95% prediction bands, forecast-vs-realized volatility, risk-regime timeline 2010–today, calibration health) → **3 · Signal & explanation — experimental** (HOLD/BUY/SELL with its threshold margin, grounded generated explanation, backtest equity curves vs buy-and-hold after costs). Exception states (stale data vintage, high-uncertainty HOLD, unvalidated signals) are designed into the UI.
-
-![RiskLens mockup](docs/assets/05_mockup_frontal.png)
+| — | Implementation: pipeline, models, backtest, dashboard, tests | ✅ Done · see [implementation notes](docs/IMPLEMENTATION_NOTES.md) |
 
 ## MVP scope (risk-first)
 
-| Tier | Content |
-|---|---|
-| **Core (must have)** | Validated risk system for SPY: GARCH volatility forecasts, low/medium/high risk levels, calibrated 95% prediction intervals, risk explanation layer |
-| **Conditional** | ARIMAX return forecasts + BUY/SELL/HOLD signals — shown as recommendations only if they beat per-asset buy-and-hold out-of-sample after costs; otherwise labeled *experimental information* |
-| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive calibration-report page |
+| Tier | Content | Outcome |
+|---|---|---|
+| **Core (must have)** | Validated risk system for SPY: GARCH volatility forecasts, low/medium/high risk levels, calibrated prediction intervals, risk explanation layer | ✅ Implemented and validated on the sealed test |
+| **Conditional** | Return forecasts + BUY/SELL/HOLD signals, shown as recommendations only if they beat per-asset buy-and-hold out-of-sample after costs; otherwise labeled *experimental information* | Implemented; acceptance rule not met, so signals stay labeled experimental |
+| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive calibration-report page | Calibration report page done; extra tickers are in the data pipeline but not modeled |
 
 ## Data architecture (Deliverable 3)
 
@@ -62,47 +76,35 @@ The gold layer is a two-dataset **data contract**:
 
 | Gold dataset | Granularity | Role |
 |---|---|---|
-| `gold_market_daily.parquet` | One row per (date, ticker) · ~16,000 rows | **Model input** — adjusted prices, log returns (target), lags, rolling volatility, VIX & Treasury regressors |
-| `gold_signals_daily.parquet` | One row per (date, ticker) | **Model output** — forecasts, risk level, signal, plus full audit trail: `model_version`, `train_end_date` (asserted `< date`: machine-checked no-look-ahead proof), `horizon_days`, `rule_version` |
+| `gold_market_daily.parquet` | One row per (date, ticker) · 16,728 rows | **Model input** — adjusted prices, log returns (target), lags, rolling volatility, VIX & Treasury regressors |
+| `gold_signals_daily.parquet` | One row per (forecast date, ticker) · 1,183 rows (SPY) | **Model output** — forecasts, 50/80/95% prediction intervals, risk level, signal, plus full audit trail: `model_version`, `train_end_date` (asserted `< date`: machine-checked no-look-ahead proof), `horizon_days`, `rule_version`. `date` is the forecast target day; `origin_date` is the day whose information was used |
 
 Every decision row is reproducible: model and rule versions map to repository tags, so any historical signal can be re-generated exactly.
 
-## Modeling strategy (Deliverable 4)
+## Modeling strategy (Deliverable 4) and what was implemented
 
 Two coupled forecasting tasks + a transparent decision rule, always measured against demanding baselines:
 
-| Task | Baseline | Candidates | Primary metrics |
+| Task | Baseline | Implemented model | Primary metrics |
 |---|---|---|---|
-| Next-day return (mean) | Naive zero-return (random walk) | ARIMA → ARIMAX (VIX, Treasury yield regressors) | RMSE/MAE vs. naive, directional accuracy |
-| Next-day volatility (risk) | 21-day rolling volatility | GARCH(1,1) → EGARCH (optional) | QLIKE, 95% prediction-interval coverage |
-| Trading strategy | **Buy-and-hold of the same asset** (primary) · buy-and-hold SPY (market reference) | Rule: `score = expected_return / volatility` → BUY/SELL/HOLD, thresholds calibrated on validation only | Sharpe, max drawdown, hit ratio — after transaction costs |
+| Next-day return (mean) | Naive zero-return (random walk) | ARIMA(2,0,0); ARIMAX with VIX/yield changes was tested and not selected (BIC on training data) | RMSE/MAE vs. naive, directional accuracy |
+| Next-day volatility (risk) | 21-day rolling volatility (and EWMA) | GARCH(1,1) with Student-t errors; GJR-GARCH tested as the asymmetric variant | QLIKE, 95% prediction-interval coverage |
+| Trading strategy | **Buy-and-hold of the same asset** (primary) · buy-and-hold SPY (market reference) | Score rule `expected_return / volatility` → BUY/SELL/HOLD and a volatility filter, both calibrated on validation only | Sharpe, max drawdown, hit ratio — after transaction costs |
 
 **Validation guarantees:**
-- Temporal split: train 2010–2021 · validation 2022–2023 · test 2024 → frozen end date, with walk-forward re-fitting
-- **Sealed test protocol:** test period and raw-data vintage frozen before modeling; winning models and thresholds pre-registered (repository commit) before the test is opened; test evaluated exactly once
-- **t+1 execution convention:** a signal computed after the close of day *t* is executed at *t+1* — positions shifted one day, eliminating execution look-ahead
-- Strict leakage controls: lag-only features, train-only statistics, forward-fill-only alignment
+- Temporal split: train 2010–2021 · validation 2022–2023 · test 2024 → frozen end date (2026-09-18), with walk-forward re-fitting every 21 trading days
+- **Sealed test protocol:** test period and raw-data vintage frozen before modeling; winning models and thresholds pre-registered (repository tag `preregistered-v1`) before the test was opened; test evaluated exactly once by a runner that refuses to execute if the frozen files changed
+- **t+1 execution convention:** a signal computed after the close of day *t* is executed at *t+1*. The primary backtest executes at the close of *t+1* (earning the return of *t+2*); the shift-one-day variant is reported as a sensitivity, and conclusions are the same under both
+- Strict leakage controls: lag-only features, train-only statistics, forward-fill-only alignment, FRED yields lagged one trading day
 
 ## Data sources (all open & free)
 
 - **Yahoo Finance** (`yfinance`) — daily OHLCV for SPY, AAPL, MSFT, JPM; VIX
 - **FRED** — 10Y Treasury yield (DGS10), yield spread (T10Y2Y), CPI (CPIAUCSL)
-- **CBOE** — official VIX history (backup source)
 
 Raw downloads are committed to the repository as an immutable, dated vintage — the project never depends on live source availability (`yfinance` uses unofficial access that may change).
 
 *Attribution and terms:* prices and VIX come from Yahoo Finance (via `yfinance`), yields and CPI from FRED (Federal Reserve Bank of St. Louis). The raw files are included only to make this academic project reproducible; check each source's terms of use before any other reuse.
-
-## Results (sealed test, 2024-01-02 to 2026-09-18, pre-registered and run once)
-
-| Question | Result |
-|---|---|
-| Are the volatility forecasts calibrated? | Yes. GARCH(1,1)-t 95% intervals cover 95.2% (Kupiec p = 0.85); the joint 50/80/95% fan-chart bands cover 49.5% / 78.7% / 95.3% |
-| Does GARCH beat rolling volatility? | Yes on QLIKE (-8.50 vs -8.36, Diebold-Mariano p = 0.010); the rolling baseline's 95% intervals are rejected (coverage 93.0%, Kupiec p = 0.02) |
-| Do ARIMA/ARIMAX forecast returns better than zero? | No (RMSE 0.00975 vs 0.00980, p = 0.54) |
-| Do the signal strategies beat buy-and-hold SPY after 5 bps costs? | No: Sharpe 0.73 (score rule) and 0.17 (volatility filter) vs 1.27; signals stay labeled EXPERIMENTAL |
-
-Details: `reports/test_results.md`, `reports/model_findings.md`, and `docs/IMPLEMENTATION_NOTES.md` (how the implementation follows the instructor feedback and where it refines the design).
 
 ## Tech stack
 
