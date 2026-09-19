@@ -1,6 +1,6 @@
 # Sealed test results (2024-01-02 to 2026-09-18)
 
-Pre-registration tag `preregistered-v1`; run at commit `573a9031ad` on 2026-09-19T18:06:25+00:00. 681 one-day-ahead forecasts, expanding window, refit every 21 days, configuration frozen in `config/preregistered.json`.
+Pre-registration tag `preregistered-v1`; run at commit `3d52e81f49` on 2026-09-19T18:22:13+00:00. 681 one-day-ahead forecasts, expanding window, refit every 21 days, configuration frozen in `config/preregistered.json`.
 
 ## Risk task: volatility (QLIKE lower is better; coverage target 95%)
 ```
@@ -36,12 +36,12 @@ always_up_directional      NaN      NaN          0.56388               NaN      
 
 ## Strategies vs buy-and-hold SPY (5 bps costs)
 ```
-                                       cumulative_return  annual_return  sharpe  max_drawdown  hit_ratio  exposure  trades
-buy_and_hold_SPY                                  0.6541         0.2047  1.2716       -0.1876     0.5639    1.0000     1.0
-A_score_rule (primary t+1)                        0.2649         0.0909  0.7309       -0.2483     0.5552    0.8120   189.0
-A_score_rule (same-close, optimistic)             0.3194         0.1080  0.7836       -0.1632     0.5497    0.8120   190.0
-B_vol_filter (primary t+1)                        0.0272         0.0100  0.1719       -0.0826     0.5235    0.4376    73.0
-B_vol_filter (same-close, optimistic)            -0.0542        -0.0204 -0.2491       -0.1691     0.5101    0.4376    74.0
+                                                          cumulative_return  annual_return  sharpe  max_drawdown  hit_ratio  exposure  trades
+buy_and_hold_SPY                                                     0.6541         0.2047  1.2716       -0.1876     0.5639    1.0000     1.0
+A_score_rule (primary: next-close execution)                         0.2649         0.0909  0.7309       -0.2483     0.5552    0.8120   189.0
+A_score_rule (shift-1 convention: trade at signal close)             0.3194         0.1080  0.7836       -0.1632     0.5497    0.8120   190.0
+B_vol_filter (primary: next-close execution)                         0.0272         0.0100  0.1719       -0.0826     0.5235    0.4376    73.0
+B_vol_filter (shift-1 convention: trade at signal close)            -0.0542        -0.0204 -0.2491       -0.1691     0.5101    0.4376    74.0
 ```
 
 Bootstrap (stationary, 2000 draws) of the Sharpe difference vs buy-and-hold:

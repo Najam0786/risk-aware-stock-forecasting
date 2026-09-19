@@ -163,10 +163,10 @@ def main() -> None:
     boot_rows, verdicts = {}, {}
     for name, dec in decided.items():
         r, held, perf = simulate(dec, st.PRIMARY_DELAY, st.COST_BPS)
-        perf_rows[f"{name} (primary t+1)"] = perf
+        perf_rows[f"{name} (primary: next-close execution)"] = perf
         series[name] = (r, held)
         _, _, same = simulate(dec, 0, st.COST_BPS)
-        perf_rows[f"{name} (same-close, optimistic)"] = same
+        perf_rows[f"{name} (shift-1 convention: trade at signal close)"] = same
         boot_rows[name] = st.bootstrap_sharpe(r, bh_r)
         verdicts[name] = bool(
             perf["sharpe"] >= bh_perf["sharpe"] and perf["max_drawdown"] >= bh_perf["max_drawdown"]
