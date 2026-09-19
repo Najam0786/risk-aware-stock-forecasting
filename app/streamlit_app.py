@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import sys
+from datetime import date
 from pathlib import Path
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -81,7 +83,7 @@ def load_regimes(_data: dd.DashboardData) -> pd.DataFrame:
     return dd.regime_table(_data.market, _data.config)
 
 
-def snap_to_forecast_date(index: pd.DatetimeIndex, picked) -> pd.Timestamp:
+def snap_to_forecast_date(index: pd.DatetimeIndex, picked: date) -> pd.Timestamp:
     earlier = index[index <= pd.Timestamp(picked)]
     return earlier[-1] if len(earlier) else index[0]
 
@@ -94,7 +96,7 @@ def item(label: str, value: str) -> str:
     return f'<div class="item"><span>{label}</span><span>{value}</span></div>'
 
 
-def plot(fig, key: str) -> None:
+def plot(fig: go.Figure, key: str) -> None:
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False}, key=key)
 
 
@@ -106,7 +108,14 @@ def choose_asset() -> None:
 
 
 ticker = st.session_state.get("ticker", "SPY")
-data = load_data(ticker)
+try:
+    data = load_data(ticker)
+except FileNotFoundError as error:
+    st.error(
+        f"No forecast available for {ticker}: a required data file is missing "
+        f"({error.filename}). Rebuild the outputs with the commands in the README."
+    )
+    st.stop()
 regimes = load_regimes(data)
 signals = data.signals
 st.markdown(CSS, unsafe_allow_html=True)
