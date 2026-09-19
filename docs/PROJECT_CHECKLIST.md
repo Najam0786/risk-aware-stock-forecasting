@@ -32,15 +32,16 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 2 — EDA and visualization
 
-- [ ] `notebooks/01_eda.ipynb`: Q1 stationarity (ADF/KPSS)
-- [ ] Q2 ACF/PACF of returns
-- [ ] Q3 volatility clustering (ACF of squared returns, rolling vol)
-- [ ] Q4 heavy tails (QQ-plot, skew/kurtosis, largest moves)
-- [ ] Q5 exogenous variables vs next-day returns/vol
-- [ ] Q6 regime comparison (2010–19, 2020, 2022, 2023+)
-- [ ] Q7 leverage effect (decides EGARCH)
-- [ ] Q8 weekday effects
-- [ ] Figures saved to `reports/figures/`; H1–H4 verdicts written down
+- [x] `src/risklens/eda.py` (train + validation only, test period excluded): Q1 stationarity (ADF/KPSS)
+- [x] Q2 ACF/PACF of returns
+- [x] Q3 volatility clustering (ACF of squared returns, rolling vol)
+- [x] Q4 heavy tails (QQ-plot, skew/kurtosis, largest moves)
+- [x] Q5 exogenous variables vs next-day returns/vol
+- [x] Q6 regime comparison (2010–19, 2020, 2021, 2022, 2023)
+- [x] Q7 leverage effect (supports GJR/EGARCH as R2)
+- [x] Q8 weekday effects (none; drop `day_of_week`)
+- [x] Figures in `reports/figures/` (7); H1–H4 verdicts in `reports/eda_findings.md`
+- [ ] Notebook version of the EDA for the appendix (optional, only if time remains)
 - [ ] Short data-quality report (rows, holidays, COVID extremes kept)
 
 ## Day 3 — baselines and models (train + validation only)
