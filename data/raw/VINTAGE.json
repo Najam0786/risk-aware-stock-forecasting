@@ -1,0 +1,74 @@
+{
+  "vintage_date": "2026-09-19",
+  "start": "2010-01-01",
+  "libraries": {
+    "yfinance": "1.7.0",
+    "pandas": "3.0.6"
+  },
+  "files": {
+    "prices_SPY.csv": {
+      "source": "yahoo",
+      "symbol": "SPY",
+      "rows": 4203,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "4e721fc882b41707a3a2ee1d91a95392651c01cf34ec24eb3311d1f8ba2111bb"
+    },
+    "prices_AAPL.csv": {
+      "source": "yahoo",
+      "symbol": "AAPL",
+      "rows": 4203,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "815fbd80d8b98e68dd00613b13f91758bc5587d9f476af8799022f06c170eba4"
+    },
+    "prices_MSFT.csv": {
+      "source": "yahoo",
+      "symbol": "MSFT",
+      "rows": 4203,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "6a7108876126d8741302b017b7c8c7077c1fe17e0fb1c51c9be7cd7b486553b1"
+    },
+    "prices_JPM.csv": {
+      "source": "yahoo",
+      "symbol": "JPM",
+      "rows": 4203,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "3a617cb8f7673e0d46d55dd16ad53b1a3d6ca8e3fecf1a4f35b4604170de6485"
+    },
+    "vix.csv": {
+      "source": "yahoo",
+      "symbol": "^VIX",
+      "rows": 4205,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "400412c7cc51459415fb182e203c4fd6e47a2d5a08631718c289b0d510f4fb59"
+    },
+    "fred_dgs10.csv": {
+      "source": "fred",
+      "symbol": "DGS10",
+      "rows": 4359,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-17",
+      "sha256": "dee5ea1545717cbd7261379a6097e3e4a6482e557036ac73503fecf8bd371991"
+    },
+    "fred_t10y2y.csv": {
+      "source": "fred",
+      "symbol": "T10Y2Y",
+      "rows": 4360,
+      "first_date": "2010-01-04",
+      "last_date": "2026-09-18",
+      "sha256": "03b49253a435e14b04015eee7b4cd3990a54036f270056ce5c0b0962ef33f31e"
+    },
+    "fred_cpi.csv": {
+      "source": "fred",
+      "symbol": "CPIAUCSL",
+      "rows": 200,
+      "first_date": "2010-01-01",
+      "last_date": "2026-08-01",
+      "sha256": "515b548cc66e4be5b52d07d486a348f37465960c0f6d30b73a28116cf63b0bad"
+    }
+  }
+}
