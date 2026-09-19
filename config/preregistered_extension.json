@@ -1,0 +1,238 @@
+{
+  "version": "prereg_v2",
+  "registered_on": "2026-09-19",
+  "protocol": "same procedure as prereg_v1 applied per asset: ARMA order by BIC on training data (no exogenous regressors), GARCH(1,1)-t, thresholds fixed on validation only, primary baseline is buy-and-hold of the same asset with SPY as market reference",
+  "acceptance_criterion_on_test": "strategy Sharpe >= buy-and-hold of the same asset and max drawdown less severe than that buy-and-hold, after 5 bps costs, primary execution",
+  "selection_fallback": "if no threshold combination reaches the minimum number of trades on validation, the most active combination is registered and flagged as not passing the validation constraints",
+  "test_protocol": "each asset evaluated exactly once with this configuration",
+  "tickers": {
+    "AAPL": {
+      "asset": "AAPL",
+      "splits": {
+        "train_end": "2021-12-31",
+        "validation_end": "2023-12-31",
+        "test_start": "2024-01-01",
+        "test_end": "2026-09-18"
+      },
+      "data_vintage": "2026-09-19",
+      "model_version": "arima000_garch11t_v1",
+      "mean_model": {
+        "type": "ARIMA",
+        "order": [
+          0,
+          0,
+          0
+        ],
+        "exog": [],
+        "trend": "constant"
+      },
+      "volatility_model": {
+        "type": "GARCH(1,1)",
+        "innovations": "student_t",
+        "mean": "constant"
+      },
+      "walk_forward": {
+        "window": "expanding",
+        "refit_every_days": 21
+      },
+      "execution": {
+        "primary_delay": 1
+      },
+      "costs_bps": 5.0,
+      "risk_levels": {
+        "low_below_pct": 40,
+        "high_above_pct": 85,
+        "low_sigma": 0.014708093377969618,
+        "high_sigma": 0.021438668367595694,
+        "reference": "GARCH conditional sigma on the training sample"
+      },
+      "rule_version": "rules_v1_AAPL",
+      "strategy_A_rule": {
+        "score": "expected_return / forecast_volatility",
+        "theta_buy": 0.05,
+        "theta_sell": 0.05,
+        "v_max_label": "none",
+        "v_max": null,
+        "signal_to_position": "BUY long, SELL flat, HOLD unchanged, start flat",
+        "passes_validation_constraints": false,
+        "validation": {
+          "sharpe": 0.26081131025565196,
+          "max_drawdown": -0.3094779663128089,
+          "trades": 1.0
+        }
+      },
+      "strategy_B_vol_filter": {
+        "rule": "long when forecast sigma < v_max, otherwise cash",
+        "v_max_label": "P50",
+        "v_max": 0.015593063927251547,
+        "passes_validation_constraints": true,
+        "validation": {
+          "sharpe": 0.9795854185375223,
+          "max_drawdown": -0.17801975005961002,
+          "trades": 25.0
+        }
+      },
+      "validation_buy_and_hold": {
+        "cumulative_return": 0.09610147177958783,
+        "annual_return": 0.04723631566276887,
+        "sharpe": 0.3035908630254487,
+        "max_drawdown": -0.3091280899269848,
+        "hit_ratio": 0.5149700598802395,
+        "exposure": 1.0,
+        "trades": 1
+      }
+    },
+    "MSFT": {
+      "asset": "MSFT",
+      "splits": {
+        "train_end": "2021-12-31",
+        "validation_end": "2023-12-31",
+        "test_start": "2024-01-01",
+        "test_end": "2026-09-18"
+      },
+      "data_vintage": "2026-09-19",
+      "model_version": "arima100_garch11t_v1",
+      "mean_model": {
+        "type": "ARIMA",
+        "order": [
+          1,
+          0,
+          0
+        ],
+        "exog": [],
+        "trend": "constant"
+      },
+      "volatility_model": {
+        "type": "GARCH(1,1)",
+        "innovations": "student_t",
+        "mean": "constant"
+      },
+      "walk_forward": {
+        "window": "expanding",
+        "refit_every_days": 21
+      },
+      "execution": {
+        "primary_delay": 1
+      },
+      "costs_bps": 5.0,
+      "risk_levels": {
+        "low_below_pct": 40,
+        "high_above_pct": 85,
+        "low_sigma": 0.012712980279337122,
+        "high_sigma": 0.018405635302982604,
+        "reference": "GARCH conditional sigma on the training sample"
+      },
+      "rule_version": "rules_v1_MSFT",
+      "strategy_A_rule": {
+        "score": "expected_return / forecast_volatility",
+        "theta_buy": 0.15,
+        "theta_sell": 0.15,
+        "v_max_label": "none",
+        "v_max": null,
+        "signal_to_position": "BUY long, SELL flat, HOLD unchanged, start flat",
+        "passes_validation_constraints": true,
+        "validation": {
+          "sharpe": 0.9081125898413318,
+          "max_drawdown": -0.23904290125991012,
+          "trades": 39.0
+        }
+      },
+      "strategy_B_vol_filter": {
+        "rule": "long when forecast sigma < v_max, otherwise cash",
+        "v_max_label": "P70",
+        "v_max": 0.015631004156018508,
+        "passes_validation_constraints": true,
+        "validation": {
+          "sharpe": 0.36301427298427913,
+          "max_drawdown": -0.1678725315677937,
+          "trades": 41.0
+        }
+      },
+      "validation_buy_and_hold": {
+        "cumulative_return": 0.13801332271525335,
+        "annual_return": 0.06719007847609726,
+        "sharpe": 0.3648186127094452,
+        "max_drawdown": -0.3591180638399113,
+        "hit_ratio": 0.5069860279441117,
+        "exposure": 1.0,
+        "trades": 1
+      }
+    },
+    "JPM": {
+      "asset": "JPM",
+      "splits": {
+        "train_end": "2021-12-31",
+        "validation_end": "2023-12-31",
+        "test_start": "2024-01-01",
+        "test_end": "2026-09-18"
+      },
+      "data_vintage": "2026-09-19",
+      "model_version": "arima202_garch11t_v1",
+      "mean_model": {
+        "type": "ARIMA",
+        "order": [
+          2,
+          0,
+          2
+        ],
+        "exog": [],
+        "trend": "constant"
+      },
+      "volatility_model": {
+        "type": "GARCH(1,1)",
+        "innovations": "student_t",
+        "mean": "constant"
+      },
+      "walk_forward": {
+        "window": "expanding",
+        "refit_every_days": 21
+      },
+      "execution": {
+        "primary_delay": 1
+      },
+      "costs_bps": 5.0,
+      "risk_levels": {
+        "low_below_pct": 40,
+        "high_above_pct": 85,
+        "low_sigma": 0.01318006887090244,
+        "high_sigma": 0.02012451431628222,
+        "reference": "GARCH conditional sigma on the training sample"
+      },
+      "rule_version": "rules_v1_JPM",
+      "strategy_A_rule": {
+        "score": "expected_return / forecast_volatility",
+        "theta_buy": 0.1,
+        "theta_sell": 0.1,
+        "v_max_label": "none",
+        "v_max": null,
+        "signal_to_position": "BUY long, SELL flat, HOLD unchanged, start flat",
+        "passes_validation_constraints": true,
+        "validation": {
+          "sharpe": 0.43682206333799595,
+          "max_drawdown": -0.2770598344201399,
+          "trades": 135.0
+        }
+      },
+      "strategy_B_vol_filter": {
+        "rule": "long when forecast sigma < v_max, otherwise cash",
+        "v_max_label": "P50",
+        "v_max": 0.014013081920882756,
+        "passes_validation_constraints": true,
+        "validation": {
+          "sharpe": 0.6764385113407123,
+          "max_drawdown": -0.14730752390718105,
+          "trades": 19.0
+        }
+      },
+      "validation_buy_and_hold": {
+        "cumulative_return": 0.1405799150148408,
+        "annual_return": 0.06840003826428931,
+        "sharpe": 0.38537978825614927,
+        "max_drawdown": -0.3792955278530047,
+        "hit_ratio": 0.5209580838323353,
+        "exposure": 1.0,
+        "trades": 1
+      }
+    }
+  }
+}

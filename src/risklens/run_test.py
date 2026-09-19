@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import json
 import subprocess
 from datetime import UTC, datetime
@@ -12,6 +13,8 @@ from scipy import stats
 from risklens import evaluation as ev
 from risklens import strategy as st
 from risklens.calibrate import CONFIG_PATH, TRAIN_END
+from risklens.extension import CONFIG_PATH as EXTENSION_CONFIG_PATH
+from risklens.extension import TICKERS as EXTENSION_TICKERS
 from risklens.live import live_mean_forecast
 from risklens.mean_models import MeanSpec, walk_forward_mean
 from risklens.run_validation import RESULTS_DIR, VALIDATION_END, mean_report, risk_report
@@ -25,8 +28,9 @@ from risklens.volatility import (
 
 ROOT = Path(__file__).resolve().parents[2]
 GOLD_DIR = ROOT / "data" / "gold"
-REPORT_PATH = ROOT / "reports" / "test_results.md"
+REPORTS_DIR = ROOT / "reports"
 TAG = "preregistered-v1"
+TAG_V2 = "preregistered-v2"
 FROZEN_FILES = [
     "src/risklens/volatility.py",
     "src/risklens/mean_models.py",
@@ -35,34 +39,50 @@ FROZEN_FILES = [
     "src/risklens/calibrate.py",
     "config/preregistered.json",
 ]
+FROZEN_FILES_V2 = FROZEN_FILES + [
+    "src/risklens/extension.py",
+    "src/risklens/signals.py",
+    "src/risklens/live.py",
+    "src/risklens/run_test.py",
+    "config/preregistered_extension.json",
+]
 Z95 = float(stats.norm.ppf(0.975))
 
 
-def assert_preregistered() -> str:
+def assert_preregistered(tag: str, frozen_files: list[str]) -> str:
     def git(*args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True)
 
-    if git("rev-parse", "--verify", f"refs/tags/{TAG}").returncode != 0:
-        raise SystemExit(f"tag {TAG} missing: pre-register before opening the test window")
-    if git("diff", "--quiet", TAG, "--", *FROZEN_FILES).returncode != 0:
-        raise SystemExit("frozen modeling files changed since the pre-registration tag")
+    if git("rev-parse", "--verify", f"refs/tags/{tag}").returncode != 0:
+        raise SystemExit(f"tag {tag} missing: pre-register before opening the test window")
+    if git("diff", "--quiet", tag, "--", *frozen_files).returncode != 0:
+        raise SystemExit(f"frozen files changed since the pre-registration tag {tag}")
     return git("rev-parse", "HEAD").stdout.strip()
 
 
-def load_returns() -> pd.Series:
+def load_returns(ticker: str = "SPY") -> pd.Series:
     gold = pd.read_parquet(GOLD_DIR / "gold_market_daily.parquet")
-    spy = gold[gold["ticker"] == "SPY"].sort_values("date")
-    return spy.set_index("date")["log_return"].iloc[1:]
+    rows = gold[gold["ticker"] == ticker].sort_values("date")
+    return rows.set_index("date")["log_return"].iloc[1:]
 
 
 def fenced(df: pd.DataFrame, digits: int = 4) -> str:
     return "```\n" + df.round(digits).to_string() + "\n```\n"
 
 
-def main() -> None:
-    head = assert_preregistered()
-    cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
-    returns = load_returns()
+def write_signals(signals: pd.DataFrame, ticker: str) -> None:
+    """Replace only this asset's rows in the shared gold_signals_daily file."""
+    path = GOLD_DIR / "gold_signals_daily.parquet"
+    if path.exists():
+        existing = pd.read_parquet(path)
+        signals = pd.concat([existing[existing["ticker"] != ticker], signals], ignore_index=True)
+    signals.sort_values(["ticker", "date"]).to_parquet(path, index=False)
+
+
+def run_asset(ticker: str, cfg: dict, tag: str, head: str, config_label: str) -> None:
+    suffix = "" if ticker == "SPY" else f"_{ticker}"
+    bh_name = f"buy_and_hold_{ticker}"
+    returns = load_returns(ticker)
     val_last = int(returns.index.searchsorted(pd.Timestamp(VALIDATION_END), side="right") - 1)
     train_end_pos = int(returns.index.searchsorted(pd.Timestamp(TRAIN_END), side="right") - 1)
     origins_all = np.arange(val_last, len(returns))
@@ -97,7 +117,6 @@ def main() -> None:
     mean = ev_fc["mean"].to_numpy()
     nu = ev_fc["nu"].to_numpy()
 
-    # risk task
     baselines = {
         "rolling_21": rolling_variance(returns).iloc[origins_all[:n_eval]],
         "ewma_094": ewma_variance(returns).iloc[origins_all[:n_eval]],
@@ -132,17 +151,15 @@ def main() -> None:
         }
     ).T
 
-    # mean task
     mean_row = mean_report(actual, mean, actual**2)
     mean_table = pd.DataFrame(
         {
             "naive_zero": {"rmse": ev.rmse(actual, np.zeros(n_eval))},
-            "arima_200": mean_row,
+            "arima_" + "".join(str(o) for o in order): mean_row,
             "always_up_directional": {"directional_acc": float(np.mean(actual > 0))},
         }
     ).T
 
-    # strategies
     v_max_a = cfg["strategy_A_rule"]["v_max"]
     v_max_a = np.inf if v_max_a is None else v_max_a
     theta = cfg["strategy_A_rule"]["theta_buy"]
@@ -152,14 +169,21 @@ def main() -> None:
         "B_vol_filter": st.vol_filter_positions(sigma, cfg["strategy_B_vol_filter"]["v_max"]),
     }
 
-    def simulate(dec: np.ndarray | None, delay: int, cost: float):
+    def simulate(
+        dec: np.ndarray | None, delay: int, cost: float, asset_returns: np.ndarray = actual
+    ):
         held = np.ones(n_eval) if dec is None else st.held_positions(dec, delay)
-        r = st.strategy_returns(actual, held, cost)
+        r = st.strategy_returns(asset_returns, held, cost)
         return r, held, st.performance(r, held)
 
     bh_r, bh_held, bh_perf = simulate(None, 0, st.COST_BPS)
-    perf_rows = {"buy_and_hold_SPY": bh_perf}
-    series = {"buy_and_hold_SPY": (bh_r, bh_held)}
+    perf_rows = {bh_name: bh_perf}
+    series = {bh_name: (bh_r, bh_held)}
+    if ticker != "SPY":
+        spy_returns = load_returns("SPY").reindex(target_dates).to_numpy()
+        ref_r, ref_held, ref_perf = simulate(None, 0, st.COST_BPS, spy_returns)
+        perf_rows["market_reference_buy_and_hold_SPY"] = ref_perf
+        series["market_reference_buy_and_hold_SPY"] = (ref_r, ref_held)
     boot_rows, verdicts = {}, {}
     for name, dec in decided.items():
         r, held, perf = simulate(dec, st.PRIMARY_DELAY, st.COST_BPS)
@@ -180,7 +204,7 @@ def main() -> None:
 
     cost_table = pd.DataFrame(
         {
-            f"{c:g} bps": {"buy_and_hold_SPY": sharpe_at(None, c)}
+            f"{c:g} bps": {bh_name: sharpe_at(None, c)}
             | {name: sharpe_at(dec, c) for name, dec in decided.items()}
             for c in (0.0, 5.0, 10.0, 20.0)
         }
@@ -199,12 +223,11 @@ def main() -> None:
     equity = pd.DataFrame({"date": target_dates})
     for name, (r, _) in series.items():
         equity[f"equity_{name}"] = np.cumprod(1 + r)
-    equity.to_csv(RESULTS_DIR / "test_equity_curves.csv", index=False)
-    test_fc.to_csv(RESULTS_DIR / "test_forecasts.csv", index_label="origin_date")
+    equity.to_csv(RESULTS_DIR / f"test_equity_curves{suffix}.csv", index=False)
+    test_fc.to_csv(RESULTS_DIR / f"test_forecasts{suffix}.csv", index_label="origin_date")
 
-    # gold_signals_daily: validation + test + one live forecast
     val = pd.read_csv(
-        RESULTS_DIR / "validation_forecasts.csv",
+        RESULTS_DIR / f"validation_forecasts{suffix}.csv",
         parse_dates=["origin_date"],
         index_col="origin_date",
     )
@@ -221,11 +244,12 @@ def main() -> None:
         index=val.index,
     )
     train_sigma = train_conditional_sigma(returns.iloc[: train_end_pos + 1]).to_numpy()
-    signals = build_signals(pd.concat([val_fc, test_fc]), cfg, train_sigma, "SPY")
+    signals = build_signals(pd.concat([val_fc, test_fc]), cfg, train_sigma, ticker)
     GOLD_DIR.mkdir(parents=True, exist_ok=True)
-    signals.to_parquet(GOLD_DIR / "gold_signals_daily.parquet", index=False)
+    write_signals(signals, ticker)
 
     metrics = {
+        "asset": ticker,
         "window": [f"{target_dates.min():%Y-%m-%d}", f"{target_dates.max():%Y-%m-%d}"],
         "n_forecasts": n_eval,
         "risk": json.loads(risk.to_json(orient="index")),
@@ -236,17 +260,19 @@ def main() -> None:
         "sharpe_by_cost": json.loads(cost_table.to_json(orient="index")),
         "verdicts": verdicts,
     }
-    (RESULTS_DIR / "test_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    (RESULTS_DIR / f"test_metrics{suffix}.json").write_text(
+        json.dumps(metrics, indent=2), encoding="utf-8"
+    )
 
     opened = datetime.now(UTC).isoformat(timespec="seconds")
     report = "\n".join(
         [
-            f"# Sealed test results ({target_dates.min():%Y-%m-%d} to "
+            f"# Sealed test results: {ticker} ({target_dates.min():%Y-%m-%d} to "
             f"{target_dates.max():%Y-%m-%d})",
             "",
-            f"Pre-registration tag `{TAG}`; run at commit `{head[:10]}` on {opened}. "
+            f"Pre-registration tag `{tag}`; run at commit `{head[:10]}` on {opened}. "
             f"{n_eval} one-day-ahead forecasts, expanding window, refit every 21 days, "
-            "configuration frozen in `config/preregistered.json`.",
+            f"configuration frozen in `{config_label}`.",
             "",
             "## Risk task: volatility (QLIKE lower is better; coverage target 95%)",
             fenced(risk),
@@ -256,7 +282,7 @@ def main() -> None:
             fenced(joint),
             "## Mean task: next-day return",
             fenced(mean_table, 5),
-            "## Strategies vs buy-and-hold SPY (5 bps costs)",
+            f"## Strategies vs buy-and-hold {ticker} (5 bps costs)",
             fenced(perf_table),
             "Bootstrap (stationary, 2000 draws) of the Sharpe difference vs buy-and-hold:",
             fenced(boot_table),
@@ -268,8 +294,28 @@ def main() -> None:
             "```\n" + json.dumps(verdicts, indent=2) + "\n```\n",
         ]
     )
-    REPORT_PATH.write_text(report, encoding="utf-8")
+    (REPORTS_DIR / f"test_results{suffix}.md").write_text(report, encoding="utf-8")
     print(report)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Open the sealed test window (gated)")
+    parser.add_argument("--extension", action="store_true", help="AAPL, MSFT and JPM (prereg v2)")
+    if parser.parse_args().extension:
+        head = assert_preregistered(TAG_V2, FROZEN_FILES_V2)
+        payload = json.loads(EXTENSION_CONFIG_PATH.read_text(encoding="utf-8"))
+        for ticker in EXTENSION_TICKERS:
+            run_asset(
+                ticker,
+                payload["tickers"][ticker],
+                TAG_V2,
+                head,
+                "config/preregistered_extension.json",
+            )
+        return
+    head = assert_preregistered(TAG, FROZEN_FILES)
+    cfg = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
+    run_asset("SPY", cfg, TAG, head, "config/preregistered.json")
 
 
 if __name__ == "__main__":

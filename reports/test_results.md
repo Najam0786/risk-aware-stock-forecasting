@@ -1,6 +1,6 @@
-# Sealed test results (2024-01-02 to 2026-09-18)
+# Sealed test results: SPY (2024-01-02 to 2026-09-18)
 
-Pre-registration tag `preregistered-v1`; run at commit `5c615c5d47` on 2026-09-19T18:24:40+00:00. 681 one-day-ahead forecasts, expanding window, refit every 21 days, configuration frozen in `config/preregistered.json`.
+Pre-registration tag `preregistered-v1`; run at commit `8a39ad47e7` on 2026-09-19T19:53:58+00:00. 681 one-day-ahead forecasts, expanding window, refit every 21 days, configuration frozen in `config/preregistered.json`.
 
 ## Risk task: volatility (QLIKE lower is better; coverage target 95%)
 ```
