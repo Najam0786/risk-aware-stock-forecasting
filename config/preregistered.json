@@ -1,0 +1,81 @@
+{
+  "version": "prereg_v1",
+  "registered_on": "2026-09-19",
+  "data_vintage": "2026-09-19",
+  "splits": {
+    "train_end": "2021-12-31",
+    "validation_end": "2023-12-31",
+    "test_start": "2024-01-01",
+    "test_end": "2026-09-18"
+  },
+  "asset": "SPY",
+  "model_version": "arima200_garch11t_v1",
+  "mean_model": {
+    "type": "ARIMA",
+    "order": [
+      2,
+      0,
+      0
+    ],
+    "exog": [],
+    "trend": "constant"
+  },
+  "volatility_model": {
+    "type": "GARCH(1,1)",
+    "innovations": "student_t",
+    "mean": "constant"
+  },
+  "walk_forward": {
+    "window": "expanding",
+    "refit_every_days": 21
+  },
+  "execution": {
+    "primary_delay": 1,
+    "meaning": "decision at origin t executes at the close of t+1 and earns the return of t+2; delay 0 (trade at the signal close) is reported only as a sensitivity"
+  },
+  "costs_bps": 5.0,
+  "risk_levels": {
+    "low_below_pct": 40,
+    "high_above_pct": 85,
+    "low_sigma": 0.006956999705738728,
+    "high_sigma": 0.012982628214816196,
+    "reference": "GARCH conditional sigma on the training sample"
+  },
+  "rule_version": "rules_v1",
+  "strategy_A_rule": {
+    "score": "expected_return / forecast_volatility",
+    "theta_buy": 0.05,
+    "theta_sell": 0.05,
+    "v_max_label": "none",
+    "v_max": null,
+    "signal_to_position": "BUY long, SELL flat, HOLD unchanged, start flat",
+    "passes_validation_constraints": true,
+    "validation": {
+      "sharpe": 0.4337750532260129,
+      "max_drawdown": -0.134366276160243,
+      "trades": 197.0
+    }
+  },
+  "strategy_B_vol_filter": {
+    "rule": "long when forecast sigma < v_max, otherwise cash",
+    "v_max_label": "P50",
+    "v_max": 0.007736724885386337,
+    "passes_validation_constraints": true,
+    "validation": {
+      "sharpe": 0.23820878160928463,
+      "max_drawdown": -0.07434443653017164,
+      "trades": 35.0
+    }
+  },
+  "validation_buy_and_hold": {
+    "cumulative_return": 0.03191559326972526,
+    "annual_return": 0.015928019422376094,
+    "sharpe": 0.1784259640431819,
+    "max_drawdown": -0.24496383714802195,
+    "hit_ratio": 0.49700598802395207,
+    "exposure": 1.0,
+    "trades": 1
+  },
+  "acceptance_criterion_on_test": "strategy Sharpe >= own buy-and-hold Sharpe and max drawdown less severe than buy-and-hold, after 5 bps costs, primary execution",
+  "test_protocol": "evaluated exactly once with this configuration"
+}

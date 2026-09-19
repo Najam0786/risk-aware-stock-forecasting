@@ -94,11 +94,13 @@ def main() -> None:
         "ewma_094": np.full(len(origins), Z95_NORMAL),
     }
     means = {"rolling_21": np.zeros(len(origins)), "ewma_094": np.zeros(len(origins))}
+    nus: dict[str, np.ndarray] = {}
     for name, asym in (("garch_t", False), ("gjr_garch_t", True)):
         wf = walk_forward_garch(returns, origins, asym)
         var_forecasts[name] = wf["var_forecast"]
         multipliers[name] = np.array([t_interval_multiplier(n) for n in wf["nu"]])
         means[name] = wf["mu"].to_numpy()
+        nus[name] = wf["nu"].to_numpy()
 
     risk_rows, risk_losses = {}, {}
     for name, var in var_forecasts.items():
@@ -147,6 +149,7 @@ def main() -> None:
     out = pd.DataFrame({"actual_next_return": actual}, index=idx)
     for name, var in var_forecasts.items():
         out[f"var_{name}"] = var.to_numpy()
+    out["nu_garch_t"] = nus["garch_t"]
     for name, fc in mean_forecasts.items():
         out[f"mean_{name}"] = fc.to_numpy()
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)

@@ -89,6 +89,13 @@ def walk_forward_garch(
     return pd.concat(rows)
 
 
+def train_conditional_sigma(train_returns: pd.Series) -> pd.Series:
+    model = arch_model(
+        train_returns * PCT, mean="Constant", vol="GARCH", p=1, q=1, dist="t", rescale=False
+    )
+    return model.fit(disp="off", options={"maxiter": 500}).conditional_volatility / PCT
+
+
 def rolling_variance(returns: pd.Series, window: int = 21) -> pd.Series:
     return returns.rolling(window).var(ddof=1)
 
