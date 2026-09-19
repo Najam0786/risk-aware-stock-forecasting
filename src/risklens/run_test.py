@@ -12,6 +12,7 @@ from scipy import stats
 from risklens import evaluation as ev
 from risklens import strategy as st
 from risklens.calibrate import CONFIG_PATH, TRAIN_END
+from risklens.live import live_mean_forecast
 from risklens.mean_models import MeanSpec, walk_forward_mean
 from risklens.run_validation import RESULTS_DIR, VALIDATION_END, mean_report, risk_report
 from risklens.signals import INTERVAL_LEVELS, block_train_end, build_signals, t_multiplier
@@ -68,14 +69,19 @@ def main() -> None:
     n_eval = len(returns) - 1 - val_last
     order = tuple(cfg["mean_model"]["order"])
 
-    mean_fc = walk_forward_mean(returns, MeanSpec(order, ()), None, origins_all, val_last)
+    mean_eval = walk_forward_mean(
+        returns, MeanSpec(order, ()), None, origins_all[:n_eval], val_last
+    ).to_numpy()
+    block_first = int(origins_all[(len(origins_all) - 1) // 21 * 21])
+    mean_live = live_mean_forecast(returns, order, block_first)
+    mean_fc = np.append(mean_eval, mean_live)
     garch = walk_forward_garch(returns, origins_all, asymmetric=False)
     idx_all = returns.index[origins_all]
     target_all = returns.index[np.minimum(origins_all + 1, len(returns) - 1)].to_series()
     target_all.iloc[-1] = returns.index[-1] + pd.offsets.BDay(1)
     test_fc = pd.DataFrame(
         {
-            "mean": mean_fc.to_numpy(),
+            "mean": mean_fc,
             "var": garch["var_forecast"].to_numpy(),
             "nu": garch["nu"].to_numpy(),
             "target_date": target_all.to_numpy(),

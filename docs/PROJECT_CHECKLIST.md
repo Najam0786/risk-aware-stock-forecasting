@@ -58,11 +58,12 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 4 — rule, pre-registration, sealed test
 
-- [ ] `rule.py`: score = expected_return / forecast_volatility; grid on validation with min-trades constraint
-- [ ] `backtest.py`: signal at close t, position from t+1, 5 bps costs, bootstrap CIs
-- [ ] Pre-register: commit models + thresholds, tag `preregistered`
-- [ ] Open test window once; write `gold_signals_daily.parquet` with audit fields, assert `train_end_date < date`
-- [ ] Evaluate acceptance criteria (D4 §7); document the outcome honestly
+- [x] `strategy.py`: score rule (A) + volatility filter (B), grid on validation (12 + 7 combos) with min-trades and drawdown constraints
+- [x] Backtest: primary execution at t+1 close (decision at t earns the return of t+2), 5 bps costs, bootstrap CIs; same-close reported as optimistic sensitivity
+- [x] Pre-registered: config + frozen code committed and tagged `preregistered-v1` before the test window was opened
+- [x] Sealed test opened once through a gated runner (fails if frozen files differ from the tag); `gold_signals_daily.parquet` written (1,183 rows: validation, test, 1 live), invariants asserted
+- [x] Acceptance (D4 §7) documented in `reports/test_results.md`: criterion 2 met (GARCH beats rolling vol, calibrated); criteria 1 and 3 not met, so signals stay EXPERIMENTAL
+- [ ] Fix `date` semantics in D3 (date = forecast target date, `origin_date` = information date) and add the new columns to the D3 data dictionary
 
 ## Day 5 — Streamlit app
 
