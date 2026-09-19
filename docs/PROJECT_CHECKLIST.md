@@ -46,12 +46,14 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 3 — baselines and models (train + validation only)
 
-- [ ] Baselines: naive zero return, 21-day rolling vol, buy-and-hold
-- [ ] GARCH(1,1) Student-t, walk-forward (expanding, refit every 21 days)
-- [ ] Risk metrics: QLIKE, RMSE vs rolling vol, 95% coverage (Kupiec, Christoffersen)
-- [ ] ARIMA then ARIMAX (VIX/yield changes, lagged); orders by AIC/BIC on train, confirmed on validation
-- [ ] Mean metrics vs naive: RMSE, MAE, directional accuracy
-- [ ] Residual diagnostics (Ljung-Box, ARCH-LM)
+- [x] Baselines: naive zero return, 21-day rolling vol, EWMA (buy-and-hold comes with the Day 4 backtest)
+- [x] GARCH(1,1) Student-t and GJR-GARCH (asymmetric variant, replaces EGARCH), walk-forward (expanding, refit every 21 days)
+- [x] Risk metrics: QLIKE, MAE, 95% coverage (Kupiec, Christoffersen), Diebold-Mariano vs rolling vol
+- [x] ARIMA then ARIMAX (VIX/yield changes, lagged); order by BIC on train (2,0,0)
+- [x] Mean metrics vs naive: RMSE, MAE, directional accuracy, Diebold-Mariano
+- [x] Tests: GARCH recursion matches `arch`, mean walk-forward has no look-ahead, Kupiec/Christoffersen/DM (12 tests pass)
+- [x] Results in `reports/model_findings.md`: GARCH gives calibrated intervals but does not significantly beat rolling vol; no mean model beats naive
+- [ ] Residual diagnostics (Ljung-Box, ARCH-LM) on the chosen models
 - [ ] Risk buckets low/medium/high from training percentiles only
 
 ## Day 4 — rule, pre-registration, sealed test

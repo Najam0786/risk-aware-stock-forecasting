@@ -1,0 +1,11 @@
+{
+  "train_end": "2021-12-31",
+  "validation_end": "2023-12-31",
+  "arma_order": [
+    2,
+    0,
+    0
+  ],
+  "exog_selected_by_bic_on_train": "none",
+  "best_vol_model_on_validation": "garch_t"
+}
