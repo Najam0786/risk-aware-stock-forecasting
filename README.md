@@ -30,7 +30,9 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 
 ![RiskLens dashboard](docs/assets/dashboard_final.png)
 
-**Live app: https://risklensspy.streamlit.app/**. Or run it locally with `uv run streamlit run app/streamlit_app.py`. The design mockup from Deliverable 5 is in [`docs/assets/05_mockup_frontal.png`](docs/assets/05_mockup_frontal.png); its numbers are illustrative, the screenshot above shows real model output.
+**Live app: https://risklensspy.streamlit.app/**. Or run it locally with `uv run streamlit run app/streamlit_app.py`.
+
+**Presentation:** [thesis defense deck (PDF, 12 slides)](docs/presentation/RiskLens_thesis_defense.pdf). The design mockup from Deliverable 5 is in [`docs/assets/05_mockup_frontal.png`](docs/assets/05_mockup_frontal.png); its numbers are illustrative, the screenshot above shows real model output.
 
 ## Project structure
 
@@ -40,6 +42,7 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 |   |-- entregas/                     # Deliverables 1-5 (design documents, unchanged)
 |   |-- IMPLEMENTATION_NOTES.md       # Feedback compliance and design-vs-implementation notes
 |   |-- PROJECT_CHECKLIST.md          # Work plan and status
+|   |-- presentation/                 # Thesis defense deck (PDF)
 |   `-- assets/                       # Deliverable 5 mockup and dashboard screenshot
 |-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
 |-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
