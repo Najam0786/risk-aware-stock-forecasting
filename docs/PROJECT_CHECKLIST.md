@@ -1,6 +1,6 @@
 # Project Checklist — RiskLens
 
-Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
+Status: implementation, documentation, dashboard and deck are complete; only the presentation rehearsal items at the end are left for the author.
 
 ## Decisions locked
 
@@ -20,15 +20,15 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 
 ## Day 1 — environment, data, gold layer
 
-- [x] `pyproject.toml`, `uv sync` (Python 3.12), `uv.lock` created (not yet committed)
+- [x] `pyproject.toml`, `uv sync` (Python 3.12), `uv.lock`
 - [x] `.gitignore` additions (`.env`, `.streamlit/secrets.toml`, `.ipynb_checkpoints/`)
 - [x] `src/risklens/ingest.py` — 8 raw files in `data/raw/`, `VINTAGE.json` manifest with hashes (vintage 2026-09-19, last price date 2026-09-18)
 - [x] `src/risklens/clean.py` — `data/processed/` (snake_case, tz-naive, dedupe, FRED `"."`/blank to NaN, trading-day spine, forward-fill only)
 - [x] `src/risklens/build_gold.py` — `gold_market_daily.parquet` (16,728 rows, 4 tickers, 2010-02-03 to 2026-09-18)
 - [x] `tests/test_pipeline.py` — 6 tests pass: PK unique, `adj_close > 0`, finite returns, no NaN after warm-up, no look-ahead, forward-fill/lag, CPI as-of
 - [x] FRED lag: DGS10 was missing the latest day (2026-09-18) at download, so FRED series are lagged 1 trading day (`FRED_LAG_DAYS`)
-- [ ] Commit Day 1 work; freeze vintage + test window; tag commit `vintage-2026-09-19`
-- [ ] README note on data sources/attribution
+- [x] Vintage and test window frozen; tag `vintage-2026-09-19`
+- [x] README note on data sources/attribution
 
 ## Day 2 — EDA and visualization
 
@@ -41,8 +41,8 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Q7 leverage effect (supports GJR/EGARCH as R2)
 - [x] Q8 weekday effects (none; drop `day_of_week`)
 - [x] Figures in `reports/figures/` (7); H1–H4 verdicts in `reports/eda_findings.md`
-- [ ] Notebook version of the EDA for the appendix (optional, only if time remains)
-- [ ] Short data-quality report (rows, holidays, COVID extremes kept)
+- [x] EDA delivered as a reproducible script with figures and findings (no notebook needed)
+- [x] Data-quality report: `reports/data_quality.md` (rows, calendar checks, validity counts, extremes kept)
 
 ## Day 3 — baselines and models (train + validation only)
 
@@ -53,8 +53,8 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Mean metrics vs naive: RMSE, MAE, directional accuracy, Diebold-Mariano
 - [x] Tests: GARCH recursion matches `arch`, mean walk-forward has no look-ahead, Kupiec/Christoffersen/DM (12 tests pass)
 - [x] Results in `reports/model_findings.md`: GARCH gives calibrated intervals but does not significantly beat rolling vol; no mean model beats naive
-- [ ] Residual diagnostics (Ljung-Box, ARCH-LM) on the chosen models
-- [ ] Risk buckets low/medium/high from training percentiles only
+- [x] Residual diagnostics (Ljung-Box, ARCH-LM): `reports/residual_diagnostics.md`; GARCH standardized residuals pass on all four assets
+- [x] Risk buckets low/medium/high from training percentiles only (`config/*.json`)
 
 ## Day 4 — rule, pre-registration, sealed test
 
@@ -63,7 +63,7 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Pre-registered: config + frozen code committed and tagged `preregistered-v1` before the test window was opened
 - [x] Sealed test opened once through a gated runner (fails if frozen files differ from the tag); `gold_signals_daily.parquet` written (1,183 rows: validation, test, 1 live), invariants asserted
 - [x] Acceptance (D4 §7) documented in `reports/test_results.md`: criterion 2 met (GARCH beats rolling vol, calibrated); criteria 1 and 3 not met, so signals stay EXPERIMENTAL
-- [ ] Fix `date` semantics in D3 (date = forecast target date, `origin_date` = information date) and add the new columns to the D3 data dictionary
+- [x] `date` semantics and new columns documented in `docs/IMPLEMENTATION_NOTES.md` (graded deliverables left unchanged)
 
 ## Day 5 — Streamlit app
 
@@ -83,13 +83,13 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Real screenshot and final metrics in slides
 - [x] README updated (results, structure, how to run, source attribution); implementation notes added
 - [ ] Rehearse once against the timings in the speaker notes; export the deck to PDF as a backup
-- [ ] One-page results summary (optional)
+- [x] Results summary: README results table
 
 ## Day 7 — buffer and rehearsal
 
 - [ ] Full run-through with the live app
 - [ ] 2–3 min fallback demo video
-- [ ] Fresh clone → `uv sync` → run reproduces results
+- [x] Fresh clone → `uv sync` → tests pass; processed and gold layers rebuild byte-identical from the frozen raw data
 - [ ] Prepared answers: weak return model, test window choice, leakage controls
 
 ## Risks

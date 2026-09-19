@@ -43,7 +43,7 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 |   `-- assets/                       # Deliverable 5 mockup and dashboard screenshot
 |-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
 |-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
-|-- tests/                            # 51 automated tests
+|-- tests/                            # 52 automated tests
 |-- config/preregistered.json         # SPY: frozen models, thresholds and protocol (tag preregistered-v1)
 |-- config/preregistered_extension.json  # AAPL, MSFT, JPM (tag preregistered-v2)
 |-- data/
@@ -124,6 +124,7 @@ Python 3.12 · uv · pandas · statsmodels (ARIMA) · arch (GARCH) · Plotly · 
 uv sync
 uv run python -m risklens.clean && uv run python -m risklens.build_gold   # from the frozen raw vintage
 uv run python -m risklens.eda
+uv run python -m risklens.data_quality && uv run python -m risklens.diagnostics
 uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
 uv run python -m risklens.run_test      # SPY: needs tag preregistered-v1 and unchanged frozen files
 uv run python -m risklens.extension     # AAPL, MSFT, JPM: validation and calibration (validation data only)

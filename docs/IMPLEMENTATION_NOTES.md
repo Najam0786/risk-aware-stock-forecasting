@@ -64,6 +64,7 @@ The risk result replicates on all three assets. AAPL's score rule formally meets
 uv sync
 uv run python -m risklens.clean && uv run python -m risklens.build_gold
 uv run python -m risklens.eda
+uv run python -m risklens.data_quality && uv run python -m risklens.diagnostics
 uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
 uv run python -m risklens.run_test      # requires tag preregistered-v1 and unchanged frozen files
 uv run python -m risklens.extension && uv run python -m risklens.run_test --extension

@@ -1,0 +1,2 @@
+# Keep data files byte-for-byte so the hashes in data/raw/VINTAGE.json stay valid on every OS
+data/** -text
