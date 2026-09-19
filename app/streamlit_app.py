@@ -72,8 +72,8 @@ SPLIT_TEXT = {
 
 
 @st.cache_resource(show_spinner=False)
-def load_data() -> dd.DashboardData:
-    return dd.load_dashboard_data(ROOT)
+def load_data(ticker: str) -> dd.DashboardData:
+    return dd.load_dashboard_data(ROOT, ticker)
 
 
 @st.cache_resource(show_spinner=False)
@@ -98,7 +98,15 @@ def plot(fig, key: str) -> None:
     st.plotly_chart(fig, width="stretch", config={"displayModeBar": False}, key=key)
 
 
-data = load_data()
+def choose_asset() -> None:
+    label = st.session_state["asset"]
+    st.session_state["ticker"] = next(t for t, name in dd.ASSET_LABELS.items() if name == label)
+    st.session_state.pop("run_date", None)
+    st.session_state.pop("date_pick", None)
+
+
+ticker = st.session_state.get("ticker", "SPY")
+data = load_data(ticker)
 regimes = load_regimes(data)
 signals = data.signals
 st.markdown(CSS, unsafe_allow_html=True)
@@ -114,7 +122,7 @@ head_a.markdown(
     unsafe_allow_html=True,
 )
 head_b.markdown(
-    f'<span class="tape">SPY <b>{last_market["adj_close"]:,.2f}</b> &nbsp;|&nbsp; '
+    f'<span class="tape">{ticker} <b>{last_market["adj_close"]:,.2f}</b> &nbsp;|&nbsp; '
     f"VIX <b>{last_market['vix_close']:.2f}</b> &nbsp;|&nbsp; "
     f"10Y <b>{last_market['dgs10']:.2f}%</b> "
     f'<span class="muted">(as of {data.market.index[-1]:%d %b %Y})</span></span>',
@@ -141,10 +149,14 @@ col_a, col_b, col_c = st.columns([1.05, 2.75, 1.7], gap="medium")
 with col_a:
     st.markdown('<div class="zone">1 · CONFIGURE</div>', unsafe_allow_html=True)
     with st.container(border=True):
-        st.selectbox("Asset", ["SPY - S&P 500 ETF"], key="asset")
-        st.caption(
-            "AAPL, MSFT and JPM belong to the extension tier and are not part of this vintage."
+        st.selectbox(
+            "Asset",
+            list(dd.ASSET_LABELS.values()),
+            index=list(dd.ASSET_LABELS).index(ticker),
+            key="asset",
+            on_change=choose_asset,
         )
+        st.caption("Each asset has its own pre-registered model and thresholds.")
         st.text_input("Forecast horizon", "1 trading day (fixed in MVP)", disabled=True)
         picked = st.date_input(
             "Forecast for",
@@ -179,7 +191,7 @@ with col_a:
     with st.container(border=True):
         rows = "".join(
             item(f"{dot(ch.GOOD if h['status'] == 'ok' else ch.WARN)}{h['label']}", h["detail"])
-            for h in dd.data_health(data.vintage)
+            for h in dd.data_health(data.vintage, ticker)
         )
         st.markdown('<div class="card-title">Data health</div>' + rows, unsafe_allow_html=True)
     with st.container(border=True):
@@ -249,7 +261,7 @@ with col_b:
         )
     with st.container(border=True):
         st.markdown(
-            f'<div class="card-title">SPY price with 50 / 80 / 95% prediction bands '
+            f'<div class="card-title">{ticker} price with 50 / 80 / 95% prediction bands '
             f'<span class="muted">· forecast for {ctx["target_date"]:%d %b %Y}</span></div>',
             unsafe_allow_html=True,
         )
@@ -291,7 +303,7 @@ with col_c:
     )
     with st.container(border=True):
         st.markdown(
-            f'<div class="card-title">Signal for {ctx["target_date"]:%d %b %Y} · SPY</div>',
+            f'<div class="card-title">Signal for {ctx["target_date"]:%d %b %Y} · {ticker}</div>',
             unsafe_allow_html=True,
         )
         s1, s2 = st.columns([1, 1.5])
@@ -325,30 +337,22 @@ with col_c:
     with st.container(border=True):
         perf = data.metrics["performance"]
         st.markdown(
-            '<div class="card-title">Strategies vs buy-and-hold SPY: sealed test, after costs</div>',
+            f'<div class="card-title">Strategies vs buy-and-hold {ticker}: sealed test, after costs</div>',
             unsafe_allow_html=True,
         )
-        plot(ch.equity_chart(data.equity), "equity")
+        plot(ch.equity_chart(data.equity, ticker), "equity")
         body = "".join(
             f"<tr><td>{label}</td><td>{perf[key]['sharpe']:.2f}</td>"
             f"<td>{perf[key]['max_drawdown'] * 100:.1f}%</td>"
             f"<td>{perf[key]['cumulative_return'] * 100:+.1f}%</td><td>{perf[key]['trades']:.0f}</td></tr>"
-            for key, label in dd.PRIMARY_KEYS.items()
+            for key, label in dd.strategy_keys(ticker).items()
         )
         st.markdown(
             '<table class="bt"><tr><th>Strategy</th><th>Sharpe</th><th>Max DD</th><th>Cumulative</th>'
             f"<th>Trades</th></tr>{body}</table>",
             unsafe_allow_html=True,
         )
-        bh = perf["buy_and_hold_SPY"]["sharpe"]
-        a = perf["A_score_rule (primary: next-close execution)"]["sharpe"]
-        b = perf["B_vol_filter (primary: next-close execution)"]["sharpe"]
-        st.markdown(
-            f'<div class="note">Signals stay EXPERIMENTAL. The pre-registered acceptance rule was not '
-            f"met on the sealed test: Sharpe {a:.2f} (A) and {b:.2f} (B) vs {bh:.2f} for buy-and-hold. "
-            "Promotion requires a stable advantage across walk-forward windows.</div>",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="note">{dd.strategy_note(data)}</div>', unsafe_allow_html=True)
 
 st.markdown(
     '<div class="footer">Academic prototype, not financial advice. Forecasts are probabilistic estimates; '

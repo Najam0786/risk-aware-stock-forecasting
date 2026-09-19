@@ -324,21 +324,27 @@ def score_bar(score: float, theta: float) -> go.Figure:
     return fig
 
 
-def equity_chart(equity: pd.DataFrame) -> go.Figure:
+def equity_chart(equity: pd.DataFrame, ticker: str = "SPY") -> go.Figure:
     series = [
-        ("equity_buy_and_hold_SPY", "Buy-and-hold SPY", BLUE),
-        ("equity_A_score_rule", "A. Score rule", ORANGE),
-        ("equity_B_vol_filter", "B. Volatility filter", AQUA),
+        (f"equity_buy_and_hold_{ticker}", f"Buy-and-hold {ticker}", BLUE, None),
+        ("equity_market_reference_buy_and_hold_SPY", "Buy-and-hold SPY (market)", MUTED, "dot"),
+        ("equity_A_score_rule", "A. Score rule", ORANGE, None),
+        ("equity_B_vol_filter", "B. Volatility filter", AQUA, None),
     ]
     fig = go.Figure()
-    for column, name, color in series:
+    for column, name, color, dash in series:
+        if column not in equity:
+            continue
+        line = {"color": color, "width": 2}
+        if dash:
+            line["dash"] = dash
         fig.add_trace(
             go.Scatter(
                 x=equity["date"],
                 y=equity[column],
                 name=name,
                 mode="lines",
-                line={"color": color, "width": 2},
+                line=line,
                 hovertemplate="%{x|%d %b %Y}: %{y:.2f}<extra>" + name + "</extra>",
             )
         )

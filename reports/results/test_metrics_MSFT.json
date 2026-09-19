@@ -1,0 +1,188 @@
+{
+  "asset": "MSFT",
+  "window": [
+    "2024-01-02",
+    "2026-09-18"
+  ],
+  "n_forecasts": 681,
+  "risk": {
+    "rolling_21": {
+      "qlike": -7.0844549143,
+      "mae_vol": 0.0097325502,
+      "rmse_var": 0.0010755558,
+      "coverage": 0.9207048458,
+      "kupiec_p": 0.0011769048,
+      "christoffersen_ind_p": 0.042649543,
+      "cond_coverage_p": 0.0006636558,
+      "dm_vs_rolling_stat": null,
+      "dm_vs_rolling_p": null
+    },
+    "ewma_094": {
+      "qlike": -7.1877976056,
+      "mae_vol": 0.0096696705,
+      "rmse_var": 0.0010644752,
+      "coverage": 0.9295154185,
+      "kupiec_p": 0.0205259562,
+      "christoffersen_ind_p": 0.1070774671,
+      "cond_coverage_p": 0.0186535943,
+      "dm_vs_rolling_stat": 2.346454372,
+      "dm_vs_rolling_p": 0.0189529866
+    },
+    "garch_t": {
+      "qlike": -7.2282281335,
+      "mae_vol": 0.0097743328,
+      "rmse_var": 0.001067203,
+      "coverage": 0.9456681351,
+      "kupiec_p": 0.6087664042,
+      "christoffersen_ind_p": 0.4072538692,
+      "cond_coverage_p": 0.6222650257,
+      "dm_vs_rolling_stat": 2.9612134675,
+      "dm_vs_rolling_p": 0.0030642947
+    }
+  },
+  "joint_intervals": {
+    "50%": {
+      "coverage": 0.5139500734,
+      "kupiec_p": 0.4665347305,
+      "christoffersen_ind_p": 0.577089123,
+      "cond_coverage_p": 0.6566737978
+    },
+    "80%": {
+      "coverage": 0.7944199706,
+      "kupiec_p": 0.7167633211,
+      "christoffersen_ind_p": 0.0653692483,
+      "cond_coverage_p": 0.1714224527
+    },
+    "95%": {
+      "coverage": 0.9471365639,
+      "kupiec_p": 0.7339842366,
+      "christoffersen_ind_p": 0.4498861794,
+      "cond_coverage_p": 0.7094880241
+    }
+  },
+  "mean": {
+    "naive_zero": {
+      "rmse": 0.0167295315,
+      "mae": null,
+      "directional_acc": null,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    },
+    "arima_100": {
+      "rmse": 0.0168771329,
+      "mae": 0.0114383502,
+      "directional_acc": 0.5227606461,
+      "dm_vs_naive_stat": -1.9757661189,
+      "dm_vs_naive_p": 0.0481812724
+    },
+    "always_up_directional": {
+      "rmse": null,
+      "mae": null,
+      "directional_acc": 0.5242290749,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    }
+  },
+  "performance": {
+    "buy_and_hold_MSFT": {
+      "cumulative_return": 0.3404580382,
+      "annual_return": 0.1145236755,
+      "sharpe": 0.5372634225,
+      "max_drawdown": -0.3449839013,
+      "hit_ratio": 0.5242290749,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "market_reference_buy_and_hold_SPY": {
+      "cumulative_return": 0.6541219752,
+      "annual_return": 0.204701955,
+      "sharpe": 1.2715714453,
+      "max_drawdown": -0.1875523733,
+      "hit_ratio": 0.563876652,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "A_score_rule (primary: next-close execution)": {
+      "cumulative_return": 0.1638498373,
+      "annual_return": 0.0577542391,
+      "sharpe": 0.3473509935,
+      "max_drawdown": -0.3511891083,
+      "hit_ratio": 0.5134228188,
+      "exposure": 0.8751835536,
+      "trades": 14.0
+    },
+    "A_score_rule (shift-1 convention: trade at signal close)": {
+      "cumulative_return": 0.1403836998,
+      "annual_return": 0.0498116397,
+      "sharpe": 0.3174698858,
+      "max_drawdown": -0.3834076343,
+      "hit_ratio": 0.5134228188,
+      "exposure": 0.8751835536,
+      "trades": 14.0
+    },
+    "B_vol_filter (primary: next-close execution)": {
+      "cumulative_return": 0.0431152738,
+      "annual_return": 0.0157428181,
+      "sharpe": 0.1775059052,
+      "max_drawdown": -0.209998869,
+      "hit_ratio": 0.5202863962,
+      "exposure": 0.6152716593,
+      "trades": 46.0
+    },
+    "B_vol_filter (shift-1 convention: trade at signal close)": {
+      "cumulative_return": 0.1361241048,
+      "annual_return": 0.0483588799,
+      "sharpe": 0.377870779,
+      "max_drawdown": -0.1880948805,
+      "hit_ratio": 0.5250596659,
+      "exposure": 0.6152716593,
+      "trades": 46.0
+    }
+  },
+  "bootstrap": {
+    "A_score_rule": {
+      "sharpe_diff": -0.189912429,
+      "diff_ci_low": -0.5984092141,
+      "diff_ci_high": 0.2114562175,
+      "prob_strategy_not_better": 0.8215,
+      "strategy_sharpe_ci_low": -0.7446785544,
+      "strategy_sharpe_ci_high": 1.4720380172,
+      "benchmark_sharpe_ci_low": -0.6126396075,
+      "benchmark_sharpe_ci_high": 1.6930240602
+    },
+    "B_vol_filter": {
+      "sharpe_diff": -0.3597575173,
+      "diff_ci_low": -1.5424693033,
+      "diff_ci_high": 0.8111881623,
+      "prob_strategy_not_better": 0.711,
+      "strategy_sharpe_ci_low": -1.025068208,
+      "strategy_sharpe_ci_high": 1.3788113966,
+      "benchmark_sharpe_ci_low": -0.6126396075,
+      "benchmark_sharpe_ci_high": 1.6930240602
+    }
+  },
+  "sharpe_by_cost": {
+    "buy_and_hold_MSFT": {
+      "0 bps": 0.5379746265,
+      "5 bps": 0.5372634225,
+      "10 bps": 0.5365515806,
+      "20 bps": 0.535125995
+    },
+    "A_score_rule": {
+      "0 bps": 0.3577215476,
+      "5 bps": 0.3473509935,
+      "10 bps": 0.3369776294,
+      "20 bps": 0.31622499
+    },
+    "B_vol_filter": {
+      "0 bps": 0.2302362295,
+      "5 bps": 0.1775059052,
+      "10 bps": 0.1247930841,
+      "20 bps": 0.0195157437
+    }
+  },
+  "verdicts": {
+    "A_score_rule": false,
+    "B_vol_filter": false
+  }
+}

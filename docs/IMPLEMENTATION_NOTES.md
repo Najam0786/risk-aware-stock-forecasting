@@ -40,6 +40,24 @@ The conclusions are the same under either, see `reports/test_results.md`. The pr
 - Returns: ARIMA(2,0,0) does not beat the naive forecast (RMSE 0.00975 vs 0.00980).
 - Strategies: neither beats buy-and-hold SPY (Sharpe 1.27) under the pre-registered rule, under either convention.
 
+## Extension assets: AAPL, MSFT, JPM
+
+The design's nice-to-have tier was implemented with the same protocol, per asset, so the instructor's point about per-asset baselines now applies in full.
+
+- **Procedure (`src/risklens/extension.py`):** ARMA order by BIC on each asset's training data with no exogenous regressors (the SPY study showed they do not help), GARCH(1,1) with Student-t errors, thresholds and volatility ceilings fixed on validation only, exactly as for SPY.
+- **Pre-registration:** configuration in `config/preregistered_extension.json`, committed and tagged `preregistered-v2` before any of the three test windows were used. The gated runner (`run_test --extension`) refuses to run if the tag is missing or any frozen file changed; the runner and the shared modules are themselves frozen at that tag.
+- **Runner generalization:** `run_test.py` was refactored to serve any asset; rerunning SPY through it reproduced the previous metrics, equity curves and signals exactly.
+- **Baselines:** primary is buy-and-hold of the same asset; buy-and-hold SPY is reported as the market reference.
+- **Selection fallback (declared before the test):** if no threshold combination reaches the minimum number of trades on validation, the most active one is registered and flagged as not passing the constraints. This happened for AAPL's score rule.
+
+| Asset | ARMA order | GARCH-t vs rolling (QLIKE, DM p) | 95% coverage (Kupiec p) | Sharpe: buy-and-hold / A / B |
+|---|---|---|---|---|
+| AAPL | (0,0,0) | -7.21 vs -7.06 (0.008) | 94.1% (0.31) | 0.90 / 0.95 / 0.07 |
+| MSFT | (1,0,0) | -7.23 vs -7.08 (0.003) | 94.6% (0.61) | 0.54 / 0.35 / 0.18 |
+| JPM | (2,0,2) | -7.39 vs -7.28 (0.002) | 94.9% (0.87) | 1.33 / 1.01 / 0.70 |
+
+The risk result replicates on all three assets. AAPL's score rule formally meets the acceptance rule but made one trade (constant mean model, so it never signals SELL and behaves as buy-and-hold); it is treated as not validated, and the dashboard says so. Reports: `reports/test_results_<TICKER>.md`, `reports/extension_validation.md`, `reports/extension_calibration.md`.
+
 ## Reproduce
 
 ```
@@ -48,5 +66,6 @@ uv run python -m risklens.clean && uv run python -m risklens.build_gold
 uv run python -m risklens.eda
 uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
 uv run python -m risklens.run_test      # requires tag preregistered-v1 and unchanged frozen files
+uv run python -m risklens.extension && uv run python -m risklens.run_test --extension
 uv run pytest
 ```

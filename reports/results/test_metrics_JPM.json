@@ -1,0 +1,188 @@
+{
+  "asset": "JPM",
+  "window": [
+    "2024-01-02",
+    "2026-09-18"
+  ],
+  "n_forecasts": 681,
+  "risk": {
+    "rolling_21": {
+      "qlike": -7.2756360029,
+      "mae_vol": 0.0089253591,
+      "rmse_var": 0.0007040111,
+      "coverage": 0.9295154185,
+      "kupiec_p": 0.0205259562,
+      "christoffersen_ind_p": 0.3740800547,
+      "cond_coverage_p": 0.0460359383,
+      "dm_vs_rolling_stat": null,
+      "dm_vs_rolling_p": null
+    },
+    "ewma_094": {
+      "qlike": -7.3529163823,
+      "mae_vol": 0.0087789032,
+      "rmse_var": 0.0006904922,
+      "coverage": 0.9412628488,
+      "kupiec_p": 0.3080903828,
+      "christoffersen_ind_p": 0.2956551794,
+      "cond_coverage_p": 0.3442913766,
+      "dm_vs_rolling_stat": 1.8010605571,
+      "dm_vs_rolling_p": 0.0716933357
+    },
+    "garch_t": {
+      "qlike": -7.393326114,
+      "mae_vol": 0.0089365502,
+      "rmse_var": 0.000688316,
+      "coverage": 0.9486049927,
+      "kupiec_p": 0.8679160792,
+      "christoffersen_ind_p": 0.4952152975,
+      "cond_coverage_p": 0.7815967243,
+      "dm_vs_rolling_stat": 3.1079349812,
+      "dm_vs_rolling_p": 0.0018839951
+    }
+  },
+  "joint_intervals": {
+    "50%": {
+      "coverage": 0.5066079295,
+      "kupiec_p": 0.7301802494,
+      "christoffersen_ind_p": 0.9424445226,
+      "cond_coverage_p": 0.9398083047
+    },
+    "80%": {
+      "coverage": 0.8149779736,
+      "kupiec_p": 0.3238133787,
+      "christoffersen_ind_p": 0.4746672946,
+      "cond_coverage_p": 0.4760244947
+    },
+    "95%": {
+      "coverage": 0.9471365639,
+      "kupiec_p": 0.7339842366,
+      "christoffersen_ind_p": 0.4498861794,
+      "cond_coverage_p": 0.7094880241
+    }
+  },
+  "mean": {
+    "naive_zero": {
+      "rmse": 0.0149707062,
+      "mae": null,
+      "directional_acc": null,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    },
+    "arima_202": {
+      "rmse": 0.0150183248,
+      "mae": 0.0105119786,
+      "directional_acc": 0.5154185022,
+      "dm_vs_naive_stat": -0.5837891768,
+      "dm_vs_naive_p": 0.5593621609
+    },
+    "always_up_directional": {
+      "rmse": null,
+      "mae": null,
+      "directional_acc": 0.5668135095,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    }
+  },
+  "performance": {
+    "buy_and_hold_JPM": {
+      "cumulative_return": 1.1787597717,
+      "annual_return": 0.333989336,
+      "sharpe": 1.3336760444,
+      "max_drawdown": -0.2442392662,
+      "hit_ratio": 0.5668135095,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "market_reference_buy_and_hold_SPY": {
+      "cumulative_return": 0.6541219752,
+      "annual_return": 0.204701955,
+      "sharpe": 1.2715714453,
+      "max_drawdown": -0.1875523733,
+      "hit_ratio": 0.563876652,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "A_score_rule (primary: next-close execution)": {
+      "cumulative_return": 0.670855482,
+      "annual_return": 0.2091974137,
+      "sharpe": 1.0116214328,
+      "max_drawdown": -0.196275632,
+      "hit_ratio": 0.5724770642,
+      "exposure": 0.8002936858,
+      "trades": 149.0
+    },
+    "A_score_rule (shift-1 convention: trade at signal close)": {
+      "cumulative_return": 0.9281435521,
+      "annual_return": 0.2750115708,
+      "sharpe": 1.2157777237,
+      "max_drawdown": -0.2454106034,
+      "hit_ratio": 0.5677655678,
+      "exposure": 0.8017621145,
+      "trades": 149.0
+    },
+    "B_vol_filter (primary: next-close execution)": {
+      "cumulative_return": 0.3060224097,
+      "annual_return": 0.1038418124,
+      "sharpe": 0.700887284,
+      "max_drawdown": -0.0985276564,
+      "hit_ratio": 0.563253012,
+      "exposure": 0.4875183554,
+      "trades": 53.0
+    },
+    "B_vol_filter (shift-1 convention: trade at signal close)": {
+      "cumulative_return": 0.551637651,
+      "annual_return": 0.1765240772,
+      "sharpe": 1.1037794714,
+      "max_drawdown": -0.1030597988,
+      "hit_ratio": 0.5855855856,
+      "exposure": 0.4889867841,
+      "trades": 53.0
+    }
+  },
+  "bootstrap": {
+    "A_score_rule": {
+      "sharpe_diff": -0.3220546116,
+      "diff_ci_low": -0.8295955839,
+      "diff_ci_high": 0.1767340653,
+      "prob_strategy_not_better": 0.8945,
+      "strategy_sharpe_ci_low": -0.0009724188,
+      "strategy_sharpe_ci_high": 2.1671661786,
+      "benchmark_sharpe_ci_low": 0.3018991266,
+      "benchmark_sharpe_ci_high": 2.4711840292
+    },
+    "B_vol_filter": {
+      "sharpe_diff": -0.6327887604,
+      "diff_ci_low": -1.6275168175,
+      "diff_ci_high": 0.3510349844,
+      "prob_strategy_not_better": 0.9055,
+      "strategy_sharpe_ci_low": -0.2776829193,
+      "strategy_sharpe_ci_high": 1.6653433004,
+      "benchmark_sharpe_ci_low": 0.3018991266,
+      "benchmark_sharpe_ci_high": 2.4711840292
+    }
+  },
+  "sharpe_by_cost": {
+    "buy_and_hold_JPM": {
+      "0 bps": 1.3344113648,
+      "5 bps": 1.3336760444,
+      "10 bps": 1.3329384856,
+      "20 bps": 1.3314566661
+    },
+    "A_score_rule": {
+      "0 bps": 1.1433913431,
+      "5 bps": 1.0116214328,
+      "10 bps": 0.8796847646,
+      "20 bps": 0.6157009984
+    },
+    "B_vol_filter": {
+      "0 bps": 0.7623318581,
+      "5 bps": 0.700887284,
+      "10 bps": 0.6392810072,
+      "20 bps": 0.5157155705
+    }
+  },
+  "verdicts": {
+    "A_score_rule": false,
+    "B_vol_filter": false
+  }
+}

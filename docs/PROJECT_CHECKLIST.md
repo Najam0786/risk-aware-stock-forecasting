@@ -75,7 +75,7 @@ Deadline: TBD (plan assumes 7 working days). Tick `[x]` as items are finished.
 - [x] Charts follow the dataviz palette (validated on the app surface); tests build every chart and render both pages (31 tests pass)
 - [x] Deployed to Streamlit Community Cloud: https://risklensspy.streamlit.app/ (fresh-clone install from `requirements.txt` verified)
 - [ ] Confirm the app opens in a private window without signing in (Share setting must be public)
-- [ ] Optional: extension tickers AAPL/MSFT/JPM (would need per-ticker calibration and a new pre-registration tag)
+- [x] Extension tickers AAPL/MSFT/JPM: per-asset validation, calibration, pre-registration (`preregistered-v2`), sealed test, dashboard asset selector, 51 tests
 
 ## Day 6 — presentation and polish
 

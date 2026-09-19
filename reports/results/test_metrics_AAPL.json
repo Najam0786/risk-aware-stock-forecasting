@@ -1,0 +1,188 @@
+{
+  "asset": "AAPL",
+  "window": [
+    "2024-01-02",
+    "2026-09-18"
+  ],
+  "n_forecasts": 681,
+  "risk": {
+    "rolling_21": {
+      "qlike": -7.0563216609,
+      "mae_vol": 0.0103564827,
+      "rmse_var": 0.0010395763,
+      "coverage": 0.919236417,
+      "kupiec_p": 0.000684375,
+      "christoffersen_ind_p": 0.0842332553,
+      "cond_coverage_p": 0.0007057579,
+      "dm_vs_rolling_stat": null,
+      "dm_vs_rolling_p": null
+    },
+    "ewma_094": {
+      "qlike": -7.150810156,
+      "mae_vol": 0.0102888387,
+      "rmse_var": 0.001008268,
+      "coverage": 0.9251101322,
+      "kupiec_p": 0.0053547174,
+      "christoffersen_ind_p": 0.8900965177,
+      "cond_coverage_p": 0.0204999762,
+      "dm_vs_rolling_stat": 2.0188364646,
+      "dm_vs_rolling_p": 0.0435042197
+    },
+    "garch_t": {
+      "qlike": -7.2103968467,
+      "mae_vol": 0.0105327799,
+      "rmse_var": 0.0009943278,
+      "coverage": 0.9412628488,
+      "kupiec_p": 0.3080903828,
+      "christoffersen_ind_p": 0.8334579574,
+      "cond_coverage_p": 0.5818581019,
+      "dm_vs_rolling_stat": 2.6494511287,
+      "dm_vs_rolling_p": 0.0080622632
+    }
+  },
+  "joint_intervals": {
+    "50%": {
+      "coverage": 0.543318649,
+      "kupiec_p": 0.0236786942,
+      "christoffersen_ind_p": 0.0121475432,
+      "cond_coverage_p": 0.0033339068
+    },
+    "80%": {
+      "coverage": 0.8149779736,
+      "kupiec_p": 0.3238133787,
+      "christoffersen_ind_p": 0.4746672946,
+      "cond_coverage_p": 0.4760244947
+    },
+    "95%": {
+      "coverage": 0.9368575624,
+      "kupiec_p": 0.1298566246,
+      "christoffersen_ind_p": 0.8249232933,
+      "cond_coverage_p": 0.3098777622
+    }
+  },
+  "mean": {
+    "naive_zero": {
+      "rmse": 0.0173854945,
+      "mae": null,
+      "directional_acc": null,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    },
+    "arima_000": {
+      "rmse": 0.0173675853,
+      "mae": 0.0117486351,
+      "directional_acc": 0.5403817915,
+      "dm_vs_naive_stat": 0.512511728,
+      "dm_vs_naive_p": 0.6082929144
+    },
+    "always_up_directional": {
+      "rmse": null,
+      "mae": null,
+      "directional_acc": 0.5403817915,
+      "dm_vs_naive_stat": null,
+      "dm_vs_naive_p": null
+    }
+  },
+  "performance": {
+    "buy_and_hold_AAPL": {
+      "cumulative_return": 0.7662263372,
+      "annual_return": 0.2342923435,
+      "sharpe": 0.8973937924,
+      "max_drawdown": -0.3336051966,
+      "hit_ratio": 0.5403817915,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "market_reference_buy_and_hold_SPY": {
+      "cumulative_return": 0.6541219752,
+      "annual_return": 0.204701955,
+      "sharpe": 1.2715714453,
+      "max_drawdown": -0.1875523733,
+      "hit_ratio": 0.563876652,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "A_score_rule (primary: next-close execution)": {
+      "cumulative_return": 0.8318064561,
+      "annual_return": 0.2510567982,
+      "sharpe": 0.9483439929,
+      "max_drawdown": -0.3336051966,
+      "hit_ratio": 0.5411764706,
+      "exposure": 0.9985315712,
+      "trades": 1.0
+    },
+    "A_score_rule (shift-1 convention: trade at signal close)": {
+      "cumulative_return": 0.7662263372,
+      "annual_return": 0.2342923435,
+      "sharpe": 0.8973937924,
+      "max_drawdown": -0.3336051966,
+      "hit_ratio": 0.5403817915,
+      "exposure": 1.0,
+      "trades": 1.0
+    },
+    "B_vol_filter (primary: next-close execution)": {
+      "cumulative_return": -0.0079455655,
+      "annual_return": -0.0029475996,
+      "sharpe": 0.070138312,
+      "max_drawdown": -0.204623482,
+      "hit_ratio": 0.5119760479,
+      "exposure": 0.4904552129,
+      "trades": 74.0
+    },
+    "B_vol_filter (shift-1 convention: trade at signal close)": {
+      "cumulative_return": -0.0918488345,
+      "annual_return": -0.0350236486,
+      "sharpe": -0.1278845911,
+      "max_drawdown": -0.2013872627,
+      "hit_ratio": 0.5119760479,
+      "exposure": 0.4904552129,
+      "trades": 74.0
+    }
+  },
+  "bootstrap": {
+    "A_score_rule": {
+      "sharpe_diff": 0.0509502005,
+      "diff_ci_low": -0.0006542888,
+      "diff_ci_high": 0.1748034311,
+      "prob_strategy_not_better": 0.354,
+      "strategy_sharpe_ci_low": -0.1492240177,
+      "strategy_sharpe_ci_high": 2.108592286,
+      "benchmark_sharpe_ci_low": -0.2095566804,
+      "benchmark_sharpe_ci_high": 2.0600273625
+    },
+    "B_vol_filter": {
+      "sharpe_diff": -0.8272554804,
+      "diff_ci_low": -1.7785133109,
+      "diff_ci_high": 0.0998364431,
+      "prob_strategy_not_better": 0.9575,
+      "strategy_sharpe_ci_low": -1.0941137382,
+      "strategy_sharpe_ci_high": 1.2553228498,
+      "benchmark_sharpe_ci_low": -0.2095566804,
+      "benchmark_sharpe_ci_high": 2.0600273625
+    }
+  },
+  "sharpe_by_cost": {
+    "buy_and_hold_AAPL": {
+      "0 bps": 0.898141648,
+      "5 bps": 0.8973937924,
+      "10 bps": 0.8966449977,
+      "20 bps": 0.8951446041
+    },
+    "A_score_rule": {
+      "0 bps": 0.9490340886,
+      "5 bps": 0.9483439929,
+      "10 bps": 0.947652778,
+      "20 bps": 0.9462670011
+    },
+    "B_vol_filter": {
+      "0 bps": 0.1484510839,
+      "5 bps": 0.070138312,
+      "10 bps": -0.0082141907,
+      "20 bps": -0.1648503165
+    }
+  },
+  "verdicts": {
+    "A_score_rule": true,
+    "B_vol_filter": false
+  }
+}

@@ -18,9 +18,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 
-@pytest.fixture(scope="module")
-def data() -> dd.DashboardData:
-    return dd.load_dashboard_data(ROOT)
+TICKERS = ["SPY", "AAPL", "MSFT", "JPM"]
+
+
+@pytest.fixture(scope="module", params=TICKERS)
+def data(request) -> dd.DashboardData:
+    return dd.load_dashboard_data(ROOT, request.param)
 
 
 @pytest.mark.parametrize("split", ["live", "test", "validation"])
@@ -52,7 +55,7 @@ def test_all_charts_build(data: dd.DashboardData) -> None:
         ch.vol_chart(data, ctx),
         ch.regime_strip(regimes, ctx),
         ch.score_bar(ctx["score"], ctx["theta"]),
-        ch.equity_chart(data.equity),
+        ch.equity_chart(data.equity, data.ticker),
         ch.sparkline(data.signals["forecast_volatility"].tail(30)),
     ]
     assert all(len(f.data) > 0 for f in figures)
@@ -72,7 +75,7 @@ def test_calibration_report_page_renders() -> None:
 
     page = AppTest.from_file(str(ROOT / "app" / "pages" / "1_Calibration_report.py")).run()
     assert not page.exception
-    assert len(page.tabs) == 4
+    assert len(page.tabs) == 5
 
 
 def test_main_page_renders_without_exceptions() -> None:
@@ -81,3 +84,24 @@ def test_main_page_renders_without_exceptions() -> None:
     app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
     assert not app.exception
     assert any("RiskLens" in m.value for m in app.markdown)
+
+
+def test_asset_selector_switches_the_dashboard() -> None:
+    from streamlit.testing.v1 import AppTest
+
+    app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
+    app.selectbox(key="asset").select(dd.ASSET_LABELS["AAPL"]).run()
+    assert not app.exception
+    assert app.session_state["ticker"] == "AAPL"
+    assert any("AAPL price with 50" in m.value for m in app.markdown)
+    app.selectbox(key="asset").select(dd.ASSET_LABELS["JPM"]).run()
+    assert not app.exception
+    assert any("JPM price with 50" in m.value for m in app.markdown)
+
+
+def test_strategy_note_flags_a_degenerate_rule() -> None:
+    data = dd.load_dashboard_data(ROOT, "AAPL")
+    note = dd.strategy_note(data)
+    assert "not evidence of timing skill" in note
+    spy_note = dd.strategy_note(dd.load_dashboard_data(ROOT, "SPY"))
+    assert "not met" in spy_note

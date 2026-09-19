@@ -2,20 +2,27 @@
 
 **Máster en Data Science — Trabajo de Fin de Máster**
 
-A risk-first financial decision support system: its core is rigorous **volatility forecasting and risk explanation** (GARCH, calibrated prediction intervals), complemented by an **experimental return-forecasting and trading-signal layer** (ARIMA + rule-based BUY/SELL/HOLD) that is promoted to "recommendation" status only if it proves consistent out-of-sample value in cost-adjusted, walk-forward backtesting. The system is implemented end to end: data pipeline, models, backtest and the **RiskLens** dashboard.
+A risk-first financial decision support system: its core is rigorous **volatility forecasting and risk explanation** (GARCH, calibrated prediction intervals), complemented by an **experimental return-forecasting and trading-signal layer** (ARIMA + rule-based BUY/SELL/HOLD) that is promoted to "recommendation" status only if it proves consistent out-of-sample value in cost-adjusted, walk-forward backtesting. The system is implemented end to end for four assets (SPY, AAPL, MSFT, JPM): data pipeline, models, backtest and the **RiskLens** dashboard.
 
 > ⚠️ **Disclaimer:** This is an academic project. Its outputs are probabilistic decision-support prototypes, **not financial advice**. Backtested performance does not guarantee future results.
 
-## Results (sealed test, 2024-01-02 to 2026-09-18, pre-registered and run once)
+## Results (sealed test, 2024-01-02 to 2026-09-18, pre-registered and run once per asset)
 
-| Question | Result |
-|---|---|
-| Are the volatility forecasts calibrated? | Yes. GARCH(1,1)-t 95% intervals cover 95.2% (Kupiec p = 0.85); the joint 50/80/95% fan-chart bands cover 49.5% / 78.7% / 95.3% |
-| Does GARCH beat rolling volatility? | Yes on QLIKE (-8.50 vs -8.36, Diebold-Mariano p = 0.010); the rolling baseline's 95% intervals are rejected (coverage 93.0%, Kupiec p = 0.02) |
-| Do ARIMA/ARIMAX forecast returns better than zero? | No (RMSE 0.00975 vs 0.00980, p = 0.54) |
-| Do the signal strategies beat buy-and-hold SPY after 5 bps costs? | No: Sharpe 0.73 (score rule) and 0.17 (volatility filter) vs 1.27; signals stay labeled EXPERIMENTAL |
+SPY was pre-registered first (tag `preregistered-v1`); AAPL, MSFT and JPM followed the same protocol, pre-registered together (tag `preregistered-v2`) before their test windows were opened. Each asset uses its own models and thresholds, and its own buy-and-hold as the primary baseline.
 
-The risk half of the system is validated; the return and signal half is reported as an honest negative result, which is the fallback planned in Deliverable 4. Details: [`reports/test_results.md`](reports/test_results.md), [`reports/model_findings.md`](reports/model_findings.md), and [`docs/IMPLEMENTATION_NOTES.md`](docs/IMPLEMENTATION_NOTES.md) (how the implementation follows the instructor feedback and where it refines the design).
+| Asset | GARCH-t vs rolling volatility (QLIKE, DM p) | 95% coverage: GARCH-t / rolling (Kupiec p) | ARIMA vs naive return forecast (p) | Sharpe: buy-and-hold / score rule / vol filter |
+|---|---|---|---|---|
+| SPY | -8.50 vs -8.36 (0.010) | 95.2% (0.85) / 93.0% (0.021) | no better (0.54) | 1.27 / 0.73 / 0.17 |
+| AAPL | -7.21 vs -7.06 (0.008) | 94.1% (0.31) / 91.9% (0.001) | no better (0.61) | 0.90 / 0.95* / 0.07 |
+| MSFT | -7.23 vs -7.08 (0.003) | 94.6% (0.61) / 92.1% (0.001) | worse (0.048) | 0.54 / 0.35 / 0.18 |
+| JPM | -7.39 vs -7.28 (0.002) | 94.9% (0.87) / 93.0% (0.021) | no better (0.56) | 1.33 / 1.01 / 0.70 |
+
+\* AAPL's score rule technically meets the acceptance rule, but it made a single trade (its mean model is a constant), so it behaves as buy-and-hold: not evidence of timing skill.
+
+- **Risk (core): validated on all four assets.** GARCH(1,1)-t beats the 21-day rolling baseline on QLIKE for every asset, its 95% intervals are calibrated (Kupiec p > 0.3), and the rolling baseline's intervals are rejected for every asset.
+- **Returns and signals: no validated edge.** ARIMA never forecasts better than zero (significantly worse for MSFT), and no strategy beats buy-and-hold of the same asset in a way that counts as skill. Signals stay labeled EXPERIMENTAL.
+
+Details: [`reports/test_results.md`](reports/test_results.md) (SPY) and `reports/test_results_<TICKER>.md`, [`reports/model_findings.md`](reports/model_findings.md), and [`docs/IMPLEMENTATION_NOTES.md`](docs/IMPLEMENTATION_NOTES.md) (how the implementation follows the instructor feedback and where it refines the design).
 
 ## RiskLens dashboard
 
@@ -36,8 +43,9 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 |   `-- assets/                       # Deliverable 5 mockup and dashboard screenshot
 |-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
 |-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
-|-- tests/                            # 31 automated tests
-|-- config/preregistered.json         # Frozen models, thresholds and protocol (tag preregistered-v1)
+|-- tests/                            # 51 automated tests
+|-- config/preregistered.json         # SPY: frozen models, thresholds and protocol (tag preregistered-v1)
+|-- config/preregistered_extension.json  # AAPL, MSFT, JPM (tag preregistered-v2)
 |-- data/
 |   |-- raw/                          # Immutable source snapshots + VINTAGE.json (tag vintage-2026-09-19)
 |   |-- processed/                    # Cleaned, standardized tables (CSV)
@@ -66,7 +74,7 @@ Deliverables 2–4 were revised to incorporate instructor feedback (25 Jul); eac
 |---|---|---|
 | **Core (must have)** | Validated risk system for SPY: GARCH volatility forecasts, low/medium/high risk levels, calibrated prediction intervals, risk explanation layer | ✅ Implemented and validated on the sealed test |
 | **Conditional** | Return forecasts + BUY/SELL/HOLD signals, shown as recommendations only if they beat per-asset buy-and-hold out-of-sample after costs; otherwise labeled *experimental information* | Implemented; acceptance rule not met, so signals stay labeled experimental |
-| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive calibration-report page | Calibration report page done; extra tickers are in the data pipeline but not modeled |
+| **Nice to have** | Extension to AAPL, MSFT, JPM; full interactive calibration-report page | ✅ Both done: three more assets under the same pre-registered protocol, and a calibration report page |
 
 ## Data architecture (Deliverable 3)
 
@@ -77,7 +85,7 @@ The gold layer is a two-dataset **data contract**:
 | Gold dataset | Granularity | Role |
 |---|---|---|
 | `gold_market_daily.parquet` | One row per (date, ticker) · 16,728 rows | **Model input** — adjusted prices, log returns (target), lags, rolling volatility, VIX & Treasury regressors |
-| `gold_signals_daily.parquet` | One row per (forecast date, ticker) · 1,183 rows (SPY) | **Model output** — forecasts, 50/80/95% prediction intervals, risk level, signal, plus full audit trail: `model_version`, `train_end_date` (asserted `< date`: machine-checked no-look-ahead proof), `horizon_days`, `rule_version`. `date` is the forecast target day; `origin_date` is the day whose information was used |
+| `gold_signals_daily.parquet` | One row per (forecast date, ticker) · 4,732 rows (4 assets) | **Model output** — forecasts, 50/80/95% prediction intervals, risk level, signal, plus full audit trail: `model_version`, `train_end_date` (asserted `< date`: machine-checked no-look-ahead proof), `horizon_days`, `rule_version`. `date` is the forecast target day; `origin_date` is the day whose information was used |
 
 Every decision row is reproducible: model and rule versions map to repository tags, so any historical signal can be re-generated exactly.
 
@@ -87,7 +95,7 @@ Two coupled forecasting tasks + a transparent decision rule, always measured aga
 
 | Task | Baseline | Implemented model | Primary metrics |
 |---|---|---|---|
-| Next-day return (mean) | Naive zero-return (random walk) | ARIMA(2,0,0); ARIMAX with VIX/yield changes was tested and not selected (BIC on training data) | RMSE/MAE vs. naive, directional accuracy |
+| Next-day return (mean) | Naive zero-return (random walk) | ARIMA with the order chosen by BIC on each asset's training data (SPY: (2,0,0)); ARIMAX with VIX/yield changes was tested on SPY and not selected | RMSE/MAE vs. naive, directional accuracy |
 | Next-day volatility (risk) | 21-day rolling volatility (and EWMA) | GARCH(1,1) with Student-t errors; GJR-GARCH tested as the asymmetric variant | QLIKE, 95% prediction-interval coverage |
 | Trading strategy | **Buy-and-hold of the same asset** (primary) · buy-and-hold SPY (market reference) | Score rule `expected_return / volatility` → BUY/SELL/HOLD and a volatility filter, both calibrated on validation only | Sharpe, max drawdown, hit ratio — after transaction costs |
 
@@ -117,7 +125,9 @@ uv sync
 uv run python -m risklens.clean && uv run python -m risklens.build_gold   # from the frozen raw vintage
 uv run python -m risklens.eda
 uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
-uv run python -m risklens.run_test      # needs tag preregistered-v1 and unchanged frozen files
+uv run python -m risklens.run_test      # SPY: needs tag preregistered-v1 and unchanged frozen files
+uv run python -m risklens.extension     # AAPL, MSFT, JPM: validation and calibration (validation data only)
+uv run python -m risklens.run_test --extension   # their sealed test: needs tag preregistered-v2
 uv run streamlit run app/streamlit_app.py
 uv run pytest
 ```

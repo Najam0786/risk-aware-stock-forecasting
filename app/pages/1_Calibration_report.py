@@ -6,6 +6,7 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[2]
 REPORTS = ROOT / "reports"
+EXTENSION_TICKERS = ("AAPL", "MSFT", "JPM")
 
 st.set_page_config(page_title="RiskLens: calibration report", layout="wide")
 st.title("Calibration report")
@@ -14,8 +15,14 @@ st.caption(
     "Academic prototype, not financial advice."
 )
 
-tab_test, tab_val, tab_calib, tab_eda = st.tabs(
-    ["Sealed test", "Model validation", "Threshold calibration", "Exploratory analysis"]
+tab_test, tab_other, tab_val, tab_calib, tab_eda = st.tabs(
+    [
+        "Sealed test (SPY)",
+        "Other assets",
+        "Model validation (SPY)",
+        "Threshold calibration (SPY)",
+        "Exploratory analysis",
+    ]
 )
 
 
@@ -25,6 +32,18 @@ def show(path: Path) -> None:
 
 with tab_test:
     show(REPORTS / "test_results.md")
+with tab_other:
+    st.markdown(
+        "AAPL, MSFT and JPM followed the same protocol as SPY, pre-registered together "
+        "(tag `preregistered-v2`) before their test windows were opened."
+    )
+    for ticker in EXTENSION_TICKERS:
+        with st.expander(f"{ticker}: sealed test results", expanded=ticker == "AAPL"):
+            show(REPORTS / f"test_results_{ticker}.md")
+    with st.expander("Validation tables"):
+        show(REPORTS / "extension_validation.md")
+    with st.expander("Threshold calibration"):
+        show(REPORTS / "extension_calibration.md")
 with tab_val:
     show(REPORTS / "model_findings.md")
     with st.expander("Full validation tables"):

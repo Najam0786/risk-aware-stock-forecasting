@@ -10,15 +10,28 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 ANNUALIZE = float(np.sqrt(252))
 BAND_SUFFIX = {0.50: "_50", 0.80: "_80", 0.95: ""}
-PRIMARY_KEYS = {
-    "buy_and_hold_SPY": "Buy-and-hold SPY",
-    "A_score_rule (primary: next-close execution)": "A. Score rule",
-    "B_vol_filter (primary: next-close execution)": "B. Volatility filter",
+ASSET_LABELS = {
+    "SPY": "SPY - S&P 500 ETF",
+    "AAPL": "AAPL - Apple",
+    "MSFT": "MSFT - Microsoft",
+    "JPM": "JPM - JPMorgan Chase",
 }
+A_KEY = "A_score_rule (primary: next-close execution)"
+B_KEY = "B_vol_filter (primary: next-close execution)"
+
+
+def strategy_keys(ticker: str) -> dict[str, str]:
+    keys = {f"buy_and_hold_{ticker}": f"Buy-and-hold {ticker}"}
+    if ticker != "SPY":
+        keys["market_reference_buy_and_hold_SPY"] = "Buy-and-hold SPY (market)"
+    keys[A_KEY] = "A. Score rule"
+    keys[B_KEY] = "B. Volatility filter"
+    return keys
 
 
 @dataclass(frozen=True)
 class DashboardData:
+    ticker: str
     signals: pd.DataFrame
     market: pd.DataFrame
     equity: pd.DataFrame
@@ -28,18 +41,45 @@ class DashboardData:
 
 
 def load_dashboard_data(root: Path = ROOT, ticker: str = "SPY") -> DashboardData:
+    suffix = "" if ticker == "SPY" else f"_{ticker}"
     signals = pd.read_parquet(root / "data" / "gold" / "gold_signals_daily.parquet")
     signals = signals[signals["ticker"] == ticker].sort_values("date").set_index("date", drop=False)
     signals.index.name = None
     market = pd.read_parquet(root / "data" / "gold" / "gold_market_daily.parquet")
     market = market[market["ticker"] == ticker].sort_values("date").set_index("date")
-    equity = pd.read_csv(
-        root / "reports" / "results" / "test_equity_curves.csv", parse_dates=["date"]
-    )
-    metrics = json.loads((root / "reports" / "results" / "test_metrics.json").read_text("utf-8"))
-    config = json.loads((root / "config" / "preregistered.json").read_text("utf-8"))
+    results = root / "reports" / "results"
+    equity = pd.read_csv(results / f"test_equity_curves{suffix}.csv", parse_dates=["date"])
+    metrics = json.loads((results / f"test_metrics{suffix}.json").read_text("utf-8"))
+    if ticker == "SPY":
+        config = json.loads((root / "config" / "preregistered.json").read_text("utf-8"))
+    else:
+        extension = json.loads(
+            (root / "config" / "preregistered_extension.json").read_text("utf-8")
+        )
+        config = extension["tickers"][ticker]
     vintage = json.loads((root / "data" / "raw" / "VINTAGE.json").read_text("utf-8"))
-    return DashboardData(signals, market, equity, metrics, config, vintage)
+    return DashboardData(ticker, signals, market, equity, metrics, config, vintage)
+
+
+def strategy_note(data: DashboardData) -> str:
+    """Plain-language status of the signal layer, derived from the pre-registered test result."""
+    perf, ticker = data.metrics["performance"], data.ticker
+    bh = perf[f"buy_and_hold_{ticker}"]
+    a, b = perf[A_KEY], perf[B_KEY]
+    verdicts = data.metrics["verdicts"]
+    if not any(verdicts.values()):
+        return (
+            "Signals stay EXPERIMENTAL. The pre-registered acceptance rule was not met on the "
+            f"sealed test: Sharpe {a['sharpe']:.2f} (A) and {b['sharpe']:.2f} (B) vs "
+            f"{bh['sharpe']:.2f} for buy-and-hold {ticker}. Promotion requires a stable "
+            "advantage across walk-forward windows."
+        )
+    return (
+        "Signals stay EXPERIMENTAL. The score rule formally meets the acceptance rule "
+        f"(Sharpe {a['sharpe']:.2f} vs {bh['sharpe']:.2f} for buy-and-hold {ticker}), but it made "
+        f"{a['trades']:.0f} trade(s): it behaves as buy-and-hold, so this is not evidence of "
+        f"timing skill. The volatility filter (Sharpe {b['sharpe']:.2f}) did not meet the rule."
+    )
 
 
 def ordinal(n: float) -> str:
@@ -145,11 +185,11 @@ def build_explanation(ctx: dict) -> str:
     )
 
 
-def data_health(vintage: dict) -> list[dict]:
+def data_health(vintage: dict, ticker: str = "SPY") -> list[dict]:
     files = vintage["files"]
-    spy = files["prices_SPY.csv"]
+    prices = files[f"prices_{ticker}.csv"]
     rows = [
-        {"label": "Prices (Yahoo)", "detail": f"{spy['rows']:,} rows", "status": "ok"},
+        {"label": "Prices (Yahoo)", "detail": f"{prices['rows']:,} rows", "status": "ok"},
         {"label": "VIX (^VIX)", "detail": f"to {files['vix.csv']['last_date']}", "status": "ok"},
         {
             "label": "FRED DGS10 / T10Y2Y",
