@@ -62,6 +62,13 @@ jobs:
             git push origin HEAD:main
           fi
 
+      - name: Flag use of a backup source
+        run: |
+          if [ "$(jq -r .backup_used data/live/data_status.json)" = "true" ]; then
+            echo "::warning::A backup data source was used because the primary failed"
+            jq -r '.errors[]' data/live/data_status.json
+          fi
+
       - name: Fail loudly when the fetch fell back to old data
         run: |
           state=$(jq -r .state data/live/data_status.json)

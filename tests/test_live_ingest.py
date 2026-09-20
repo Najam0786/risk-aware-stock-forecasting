@@ -129,6 +129,8 @@ def test_new_sessions_are_appended_with_returns_from_the_fetched_history(raw_dir
     assert status["new_price_rows"] == 2
     assert sorted(stored["date"].unique()) == FIRST_NEW
     assert set(stored["ticker"]) == set(li.TICKERS)
+    assert not status["backup_used"]
+    assert status["errors"] == []
     spy = stored[stored["ticker"] == "SPY"].set_index("date")
     day = BDAYS.get_loc(FIRST_NEW[0])
     expected = np.log(PRICES["SPY"][day] / PRICES["SPY"][day - 1])
@@ -171,7 +173,7 @@ def test_incremental_run_extends_stored_data(raw_dir, live_dir):
     assert not stored.duplicated(["date", "ticker"]).any()
 
 
-def test_backup_price_source_is_used_when_the_primary_fails(raw_dir, live_dir):
+def test_backup_price_source_keeps_the_data_current_and_is_flagged(raw_dir, live_dir):
     sources = make_sources(
         [("yahoo", prices_fetcher(fail=True)), ("tiingo", prices_fetcher(adj_factor=0.97))]
     )
@@ -179,7 +181,8 @@ def test_backup_price_source_is_used_when_the_primary_fails(raw_dir, live_dir):
     stored = pd.read_csv(live_dir / li.PRICES_FILE)
     assert (stored["source"] == "tiingo").all()
     assert status["components"]["prices"]["sources"] == dict.fromkeys(li.TICKERS, "tiingo")
-    assert status["state"] == "fallback"
+    assert status["state"] == "current"
+    assert status["backup_used"]
     assert any("yahoo" in e for e in status["errors"])
 
 

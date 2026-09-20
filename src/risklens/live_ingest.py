@@ -319,7 +319,8 @@ def refresh(
     prices_ok = len(frames) == len(TICKERS)
     accepted = common_prefix(frames) if prices_ok else []
     fetched_dates = set().union(*(set(f["date"]) for f in frames.values()))
-    if prices_ok and len(fetched_dates) > len(accepted):
+    calendar_ok = not (prices_ok and len(fetched_dates) > len(accepted))
+    if not calendar_ok:
         errors.append("prices: tickers disagree on the trading calendar, later dates held back")
     if accepted:
         new_prices = pd.concat(
@@ -391,7 +392,8 @@ def refresh(
         write_atomic(merged.rename_axis("date").reset_index(), live_dir / MACRO_FILE)
 
     behind = sessions_behind(last_close, now)
-    if errors:
+    failed = not (prices_ok and calendar_ok and vix_new is not None and macro_ok)
+    if failed:
         state = "fallback"
     elif behind == 0:
         state = "current"
@@ -401,7 +403,7 @@ def refresh(
         "checked_at": now.astimezone(UTC).isoformat(timespec="seconds"),
         "last_successful_fetch_at": (
             now.astimezone(UTC).isoformat(timespec="seconds")
-            if not errors
+            if not failed
             else previous.get("last_successful_fetch_at")
         ),
         "state": state,
@@ -409,6 +411,7 @@ def refresh(
         "expected_last_session": f"{expected_last_session(now):%Y-%m-%d}",
         "sessions_behind": behind,
         "new_price_rows": len(accepted),
+        "backup_used": bool(errors) and not failed,
         "components": {
             "prices": {"ok": prices_ok, "sources": price_sources},
             "vix": {"ok": vix_new is not None, "source": vix_name},
