@@ -35,6 +35,7 @@ header[data-testid="stHeader"] {background: transparent;}
 .banner {border-left: 4px solid #fab219; background: rgba(250,178,25,.10); border-radius: 8px;
          padding: .55rem 1rem; font-size: .88rem; color: #f3e6c4; margin: .5rem 0 .7rem;}
 .banner b {color: #fff;}
+.banner-info {border-left-color: #3987e5; background: rgba(57,135,229,.10); color: #d5e4f8;}
 .kpi-label {font-size: .7rem; letter-spacing: .1em; color: #8fa3c4; text-transform: uppercase;}
 .kpi-value {font-size: 2.1rem; font-weight: 800; line-height: 1.15; color: #fff;}
 .kpi-sub {font-size: .82rem; color: #b8c4dc;}
@@ -68,18 +69,19 @@ table.bt th:first-child, table.bt td:first-child {text-align: left;}
 
 SPLIT_TEXT = {
     "live": "Live forecast for the next session (not yet realized)",
+    "post_freeze": "After the data freeze: out of sample, not part of the sealed test",
     "test": "Sealed test period (out of sample)",
     "validation": "Validation period (rule thresholds were calibrated on this window)",
 }
 
 
 @st.cache_resource(show_spinner=False)
-def load_data(ticker: str) -> dd.DashboardData:
+def load_data(ticker: str, fingerprint: tuple) -> dd.DashboardData:
     return dd.load_dashboard_data(ROOT, ticker)
 
 
 @st.cache_resource(show_spinner=False)
-def load_regimes(_data: dd.DashboardData) -> pd.DataFrame:
+def load_regimes(_data: dd.DashboardData, fingerprint: tuple) -> pd.DataFrame:
     return dd.regime_table(_data.market, _data.config)
 
 
@@ -109,14 +111,15 @@ def choose_asset() -> None:
 
 ticker = st.session_state.get("ticker", "SPY")
 try:
-    data = load_data(ticker)
+    fingerprint = dd.data_fingerprint(ROOT)
+    data = load_data(ticker, fingerprint)
 except FileNotFoundError as error:
     st.error(
         f"No forecast available for {ticker}: a required data file is missing "
         f"({error.filename}). Rebuild the outputs with the commands in the README."
     )
     st.stop()
-regimes = load_regimes(data)
+regimes = load_regimes(data, fingerprint)
 signals = data.signals
 st.markdown(CSS, unsafe_allow_html=True)
 
@@ -139,19 +142,15 @@ head_b.markdown(
 )
 head_c.markdown(
     f'<span class="chip">Forecast for {ctx["target_date"]:%a %d %b %Y}</span>'
-    f'<span class="chip">Vintage {data.vintage["vintage_date"]}</span>',
+    f'<span class="chip">{dd.data_chip(data)}</span>',
     unsafe_allow_html=True,
 )
 
-stale = dd.staleness(data.vintage, pd.Timestamp.today())
-if stale:
-    st.markdown(
-        f'<div class="banner"><b>! Market data is {stale["days"]} days old '
-        f"(vintage {stale['vintage']}).</b> The forecast uses the last available close "
-        f"({stale['last_close']}), a newer close may exist. Re-run the ingestion after the next "
-        "market close to refresh.</div>",
-        unsafe_allow_html=True,
-    )
+banner = dd.live_banner(data, pd.Timestamp.today())
+if banner:
+    css = "banner banner-info" if banner["level"] == "info" else "banner"
+    mark = "" if banner["level"] == "info" else "! "
+    st.markdown(f'<div class="{css}"><b>{mark}{banner["text"]}</b></div>', unsafe_allow_html=True)
 
 col_a, col_b, col_c = st.columns([1.05, 2.75, 1.7], gap="medium")
 
@@ -200,7 +199,7 @@ with col_a:
     with st.container(border=True):
         rows = "".join(
             item(f"{dot(ch.GOOD if h['status'] == 'ok' else ch.WARN)}{h['label']}", h["detail"])
-            for h in dd.data_health(data.vintage, ticker)
+            for h in dd.data_health(data.vintage, ticker, data.status)
         )
         st.markdown('<div class="card-title">Data health</div>' + rows, unsafe_allow_html=True)
     with st.container(border=True):
@@ -213,6 +212,14 @@ with col_a:
             + item("Transaction costs", "5 bps per trade"),
             unsafe_allow_html=True,
         )
+    monitor = dd.monitor_rows(data)
+    if monitor:
+        with st.container(border=True):
+            st.markdown(
+                '<div class="card-title">Live monitor (after the freeze)</div>'
+                + "".join(item(label, value) for label, value in monitor),
+                unsafe_allow_html=True,
+            )
     st.page_link("pages/1_Calibration_report.py", label="View calibration report")
 
 with col_b:

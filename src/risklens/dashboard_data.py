@@ -38,15 +38,42 @@ class DashboardData:
     metrics: dict
     config: dict
     vintage: dict
+    status: dict | None = None
+    monitor: dict | None = None
+
+
+def read_json(path: Path) -> dict | None:
+    return json.loads(path.read_text("utf-8")) if path.exists() else None
+
+
+def data_fingerprint(root: Path = ROOT) -> tuple:
+    """Changes whenever a refresh rewrites the live layer, so cached data is reloaded."""
+    live = root / "data" / "live"
+    if not live.exists():
+        return ()
+    return tuple(
+        (p.name, p.stat().st_mtime_ns, p.stat().st_size)
+        for p in sorted(live.iterdir())
+        if p.is_file()
+    )
 
 
 def load_dashboard_data(root: Path = ROOT, ticker: str = "SPY") -> DashboardData:
     suffix = "" if ticker == "SPY" else f"_{ticker}"
+    live = root / "data" / "live"
     signals = pd.read_parquet(root / "data" / "gold" / "gold_signals_daily.parquet")
-    signals = signals[signals["ticker"] == ticker].sort_values("date").set_index("date", drop=False)
-    signals.index.name = None
+    signals = signals[signals["ticker"] == ticker]
     market = pd.read_parquet(root / "data" / "gold" / "gold_market_daily.parquet")
-    market = market[market["ticker"] == ticker].sort_values("date").set_index("date")
+    market = market[market["ticker"] == ticker]
+    if (live / "signals_live.parquet").exists() and (live / "gold_market_live.parquet").exists():
+        extra = pd.read_parquet(live / "signals_live.parquet")
+        extra = extra[extra["ticker"] == ticker]
+        signals = pd.concat([signals[~signals["date"].isin(extra["date"])], extra])
+        more = pd.read_parquet(live / "gold_market_live.parquet")
+        market = pd.concat([market, more[more["ticker"] == ticker]])
+    signals = signals.sort_values("date").set_index("date", drop=False)
+    signals.index.name = None
+    market = market.sort_values("date").set_index("date")
     results = root / "reports" / "results"
     equity = pd.read_csv(results / f"test_equity_curves{suffix}.csv", parse_dates=["date"])
     metrics = json.loads((results / f"test_metrics{suffix}.json").read_text("utf-8"))
@@ -58,7 +85,17 @@ def load_dashboard_data(root: Path = ROOT, ticker: str = "SPY") -> DashboardData
         )
         config = extension["tickers"][ticker]
     vintage = json.loads((root / "data" / "raw" / "VINTAGE.json").read_text("utf-8"))
-    return DashboardData(ticker, signals, market, equity, metrics, config, vintage)
+    return DashboardData(
+        ticker,
+        signals,
+        market,
+        equity,
+        metrics,
+        config,
+        vintage,
+        status=read_json(live / "data_status.json"),
+        monitor=read_json(live / "live_monitor.json"),
+    )
 
 
 def strategy_note(data: DashboardData) -> str:
@@ -185,10 +222,19 @@ def build_explanation(ctx: dict) -> str:
     )
 
 
-def data_health(vintage: dict, ticker: str = "SPY") -> list[dict]:
+def data_health(vintage: dict, ticker: str = "SPY", status: dict | None = None) -> list[dict]:
     files = vintage["files"]
     prices = files[f"prices_{ticker}.csv"]
-    rows = [
+    rows = []
+    if status:
+        rows.append(
+            {
+                "label": "Live data",
+                "detail": f"{status['state']}, close {status['last_close']}",
+                "status": "ok" if status["state"] == "current" else "warn",
+            }
+        )
+    rows += [
         {"label": "Prices (Yahoo)", "detail": f"{prices['rows']:,} rows", "status": "ok"},
         {"label": "VIX (^VIX)", "detail": f"to {files['vix.csv']['last_date']}", "status": "ok"},
         {
@@ -215,3 +261,86 @@ def staleness(vintage: dict, today: pd.Timestamp) -> dict | None:
 
 def files_last_date(vintage: dict) -> str:
     return vintage["files"]["prices_SPY.csv"]["last_date"]
+
+
+STATUS_MAX_AGE_DAYS = 4
+
+
+def _utc_naive(value: str) -> pd.Timestamp:
+    stamp = pd.Timestamp(value)
+    return stamp.tz_convert("UTC").tz_localize(None) if stamp.tzinfo else stamp
+
+
+def live_banner(data: DashboardData, today: pd.Timestamp) -> dict | None:
+    """Banner for the data state: `level` is "warn" or "info"; None when everything is current."""
+    last_data = data.market.index[-1]
+    status = data.status
+    if status is None:
+        stale = staleness(data.vintage, today)
+        if stale is None:
+            return None
+        return {
+            "level": "warn",
+            "text": (
+                f"Market data is {stale['days']} days old (vintage {stale['vintage']}). The forecast "
+                f"uses the last available close ({stale['last_close']}); a newer close may exist."
+            ),
+        }
+    checked = _utc_naive(status["checked_at"])
+    if (today.normalize() - checked.normalize()).days > STATUS_MAX_AGE_DAYS:
+        return {
+            "level": "warn",
+            "text": (
+                f"The live refresh has not run since {checked:%d %b %Y}. Showing the last stored "
+                f"close ({last_data:%d %b %Y})."
+            ),
+        }
+    if pd.Timestamp(status["last_close"]) > last_data:
+        return {
+            "level": "warn",
+            "text": (
+                f"Prices are fetched through {status['last_close']} but forecasts are computed only "
+                f"through {last_data:%Y-%m-%d}. The next refresh should catch up."
+            ),
+        }
+    if status["state"] == "fallback":
+        reason = status["errors"][0] if status["errors"] else "unknown error"
+        return {
+            "level": "warn",
+            "text": (
+                f"The live data fetch failed on {checked:%d %b %H:%M} UTC, so the last good close "
+                f"({status['last_close']}) is shown. Cause: {reason}."
+            ),
+        }
+    if status["state"] == "delayed":
+        return {
+            "level": "info",
+            "text": (
+                f"The data source has not published a close after {status['last_close']} yet "
+                "(market holiday or publication delay)."
+            ),
+        }
+    return None
+
+
+def data_chip(data: DashboardData) -> str:
+    if data.status is None:
+        return f"Vintage {data.vintage['vintage_date']}"
+    labels = {"current": "Live", "delayed": "Delayed", "fallback": "Fallback"}
+    return f"{labels[data.status['state']]} data · close {data.status['last_close']}"
+
+
+def monitor_rows(data: DashboardData) -> list[tuple[str, str]] | None:
+    if not data.monitor:
+        return None
+    m = data.monitor["tickers"].get(data.ticker)
+    if m is None:
+        return None
+    if m["n_forecasts"] == 0:
+        return [("Realized forecasts", "0"), ("Status", "waiting for the first close")]
+    rows = [
+        ("Realized forecasts", str(m["n_forecasts"])),
+        ("95% coverage", f"{m['coverage_95'] * 100:.1f}%"),
+    ]
+    rows.append(("Status", m["status"].replace("_", " ")))
+    return rows

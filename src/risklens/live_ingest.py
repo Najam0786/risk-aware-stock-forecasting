@@ -261,7 +261,7 @@ def read_live_prices(live_dir: Path) -> pd.DataFrame:
 
 def read_live_series(path: Path, column: str) -> pd.Series:
     if not path.exists():
-        return pd.Series(dtype="float64")
+        return pd.Series(dtype="float64", index=pd.DatetimeIndex([], name="date"))
     df = pd.read_csv(path, parse_dates=["date"]).dropna(subset=[column])
     return df.set_index("date")[column]
 
