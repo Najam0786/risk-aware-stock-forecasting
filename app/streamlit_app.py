@@ -148,7 +148,7 @@ if stale:
     st.markdown(
         f'<div class="banner"><b>! Market data is {stale["days"]} days old '
         f"(vintage {stale['vintage']}).</b> The forecast uses the last available close "
-        f"({stale['last_close']}), a weekend or holiday gap. Re-run the ingestion after the next "
+        f"({stale['last_close']}), a newer close may exist. Re-run the ingestion after the next "
         "market close to refresh.</div>",
         unsafe_allow_html=True,
     )

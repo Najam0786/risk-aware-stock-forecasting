@@ -67,6 +67,8 @@ def test_staleness_banner_logic() -> None:
         "files": {"prices_SPY.csv": {"last_date": "2026-09-18"}},
     }
     assert dd.staleness(vintage, pd.Timestamp("2026-09-19")) is None
+    assert dd.staleness(vintage, pd.Timestamp("2026-09-20")) is None
+    assert dd.staleness(vintage, pd.Timestamp("2026-09-21")) is None
     assert dd.staleness(vintage, pd.Timestamp("2026-09-22"))["days"] == 4
 
 

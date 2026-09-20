@@ -202,13 +202,14 @@ def data_health(vintage: dict, ticker: str = "SPY") -> list[dict]:
 
 def staleness(vintage: dict, today: pd.Timestamp) -> dict | None:
     last = pd.Timestamp(files_last_date(vintage))
-    gap = (today.normalize() - last).days
-    if gap < 2:
+    today = today.normalize()
+    missed_sessions = np.busday_count((last + pd.Timedelta(days=1)).date(), today.date())
+    if missed_sessions < 1:
         return None
     return {
         "vintage": vintage["vintage_date"],
         "last_close": f"{last:%Y-%m-%d}",
-        "days": gap,
+        "days": (today - last).days,
     }
 
 
