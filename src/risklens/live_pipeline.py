@@ -76,7 +76,7 @@ def run(
     lm.write_live_market(market, paths.live)
     mon.write_monitor(monitor, paths.live)
     (paths.reports / REPORT_NAME).write_text(
-        mon.render_report(monitor, status, signals), encoding="utf-8"
+        mon.render_report(monitor, status, signals), encoding="utf-8", newline="\n"
     )
     ls.write_signals_live(signals, paths.live)
     return status

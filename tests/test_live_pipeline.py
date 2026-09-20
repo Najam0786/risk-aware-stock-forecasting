@@ -122,6 +122,14 @@ def test_pipeline_reports_current_data_and_writes_the_live_layer(project):
     assert (project.reports / pipe.REPORT_NAME).exists()
 
 
+def test_live_text_files_use_unix_line_endings(project):
+    files = [
+        project.live / n
+        for n in (li.PRICES_FILE, li.VIX_FILE, li.MACRO_FILE, li.STATUS_FILE, mon.MONITOR_FILE)
+    ] + [project.reports / pipe.REPORT_NAME]
+    assert all(b"\r" not in f.read_bytes() for f in files)
+
+
 def test_frozen_outputs_are_untouched(project):
     for rel in (
         "data/gold/gold_market_daily.parquet",

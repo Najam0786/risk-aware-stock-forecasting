@@ -84,7 +84,7 @@ def _clean(value: object) -> object:
 def write_monitor(monitor: dict, live_dir: Path) -> None:
     path = live_dir / MONITOR_FILE
     tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(_clean(monitor), indent=2), encoding="utf-8")
+    tmp.write_text(json.dumps(_clean(monitor), indent=2), encoding="utf-8", newline="\n")
     tmp.replace(path)
 
 

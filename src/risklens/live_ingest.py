@@ -248,7 +248,7 @@ def common_prefix(frames: dict[str, pd.DataFrame]) -> list[pd.Timestamp]:
 
 def write_atomic(df: pd.DataFrame, path: Path) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
-    df.to_csv(tmp, index=False)
+    df.to_csv(tmp, index=False, lineterminator="\n")
     os.replace(tmp, path)
 
 
@@ -421,7 +421,7 @@ def refresh(
     }
     status_path = live_dir / STATUS_FILE
     tmp = status_path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(status, indent=2), encoding="utf-8")
+    tmp.write_text(json.dumps(status, indent=2), encoding="utf-8", newline="\n")
     os.replace(tmp, status_path)
     return status
 
