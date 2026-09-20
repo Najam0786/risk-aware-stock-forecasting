@@ -58,6 +58,18 @@ The design's nice-to-have tier was implemented with the same protocol, per asset
 
 The risk result replicates on all three assets. AAPL's score rule formally meets the acceptance rule but made one trade (constant mean model, so it never signals SELL and behaves as buy-and-hold); it is treated as not validated, and the dashboard says so. Reports: `reports/test_results_<TICKER>.md`, `reports/extension_validation.md`, `reports/extension_calibration.md`.
 
+## Live data layer (added after the freeze)
+
+Purpose: the dashboard should not go stale, without weakening the evaluation protocol.
+
+- Storage: everything new lives in `data/live/` (`prices_live.csv`, `vix_live.csv`, `macro_live.csv`, `gold_market_live.parquet`, `signals_live.parquet`, `live_monitor.json`, `data_status.json`). `data/raw`, `VINTAGE.json`, `data/gold`, `reports/results` and every frozen file are never written; `tests/test_vintage.py` still checks the raw hashes.
+- Splicing: Yahoo restates adjusted prices after dividends, but past log returns do not change, so the live layer works in returns. Each fetch must reproduce the stored returns on the overlapping days (tolerance 1e-3) before new rows are accepted. The live market table is rebuilt by the frozen feature code and must reproduce the frozen gold table exactly (checked on every run).
+- Scoring: `live_scoring.py` calls the frozen ARIMA and GARCH functions with the walk-forward blocks aligned to the frozen schedule. Recomputing the last frozen origin gives the stored 21 Sep 2026 row with difference 0 for all four assets. The `vol_percentile` history is the training sigmas plus every earlier forecast, as in the sealed run.
+- Labels: `post_freeze` = realized forecast after the freeze; `live` = next session. The frozen `live` row for 21 Sep is superseded by the same row once its close arrives.
+- Not automated on purpose: EDA, calibration, thresholds and model retraining. Changing them would need a new pre-registration tag and a new sealed window.
+- Failure handling: sources are tried in order, invalid data is rejected, and the last good data stays if all fail. The workflow turns red when the status is `fallback`; the app shows the reason.
+- Known limits: market holidays are not modelled (a holiday shows as `delayed`); CPI is not refreshed (monthly, unused by the signals); the Tiingo path is covered by mocked tests, not a live call, until the `TIINGO_API_KEY` secret is set.
+
 ## Reproduce
 
 ```
@@ -68,5 +80,6 @@ uv run python -m risklens.data_quality && uv run python -m risklens.diagnostics
 uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
 uv run python -m risklens.run_test      # requires tag preregistered-v1 and unchanged frozen files
 uv run python -m risklens.extension && uv run python -m risklens.run_test --extension
+uv run python -m risklens.live_pipeline   # optional: refresh live data
 uv run pytest
 ```

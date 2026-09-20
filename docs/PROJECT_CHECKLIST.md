@@ -74,7 +74,7 @@ Status: implementation, documentation, dashboard and deck are complete; only the
 - [x] Stale-data banner (shows when the last close is 2+ days old), disclaimer footer, calibration report page
 - [x] Charts follow the dataviz palette (validated on the app surface); tests build every chart and render both pages (31 tests pass)
 - [x] Deployed to Streamlit Community Cloud: https://risklensspy.streamlit.app/ (fresh-clone install from `requirements.txt` verified)
-- [ ] Confirm the app opens in a private window without signing in (Share setting must be public)
+- [x] Confirm the app opens in a private window without signing in (checked anonymously: HTTP 200, no sign-in)
 - [x] Extension tickers AAPL/MSFT/JPM: per-asset validation, calibration, pre-registration (`preregistered-v2`), sealed test, dashboard asset selector, 51 tests
 
 ## Day 6 — presentation and polish
@@ -91,6 +91,14 @@ Status: implementation, documentation, dashboard and deck are complete; only the
 - [ ] 2–3 min fallback demo video
 - [x] Fresh clone → `uv sync` → tests pass; processed and gold layers rebuild byte-identical from the frozen raw data
 - [ ] Prepared answers: weak return model, test window choice, leakage controls
+
+## Live data layer (after the freeze)
+
+- [x] `live_ingest`: Yahoo, Tiingo and FRED sources with retries, validation, atomic writes, last-good fallback and `data_status.json`
+- [x] `live_market`, `live_scoring`, `live_monitor`, `live_pipeline`: post-freeze features, signals by the frozen procedure, monitoring report
+- [x] Dashboard: live rows merged, data-state banner and chip, live monitor card, cache reloads when the live files change
+- [x] `.github/workflows/live-refresh.yml`: weekdays 22:30 UTC, tests gate the commit, red run on fallback
+- [ ] Add the `TIINGO_API_KEY` repository secret (free key from tiingo.com) and run the workflow once from the Actions tab
 
 ## Risks
 

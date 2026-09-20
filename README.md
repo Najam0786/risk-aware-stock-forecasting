@@ -44,15 +44,17 @@ Single-screen Streamlit dashboard with a risk-first hierarchy: **1 · Configure*
 |   |-- PROJECT_CHECKLIST.md          # Work plan and status
 |   |-- presentation/                 # Thesis defense deck (PDF)
 |   `-- assets/                       # Deliverable 5 mockup and dashboard screenshot
-|-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts
+|-- src/risklens/                     # Pipeline, models, backtest, dashboard data and charts, live layer
 |-- app/                              # Streamlit dashboard (streamlit_app.py + calibration page)
-|-- tests/                            # 52 automated tests
+|-- tests/                            # Automated tests (pipeline, models, dashboard, live layer)
+|-- .github/workflows/live-refresh.yml   # Daily live-data refresh (weekdays, after the US close)
 |-- config/preregistered.json         # SPY: frozen models, thresholds and protocol (tag preregistered-v1)
 |-- config/preregistered_extension.json  # AAPL, MSFT, JPM (tag preregistered-v2)
 |-- data/
 |   |-- raw/                          # Immutable source snapshots + VINTAGE.json (tag vintage-2026-09-19)
 |   |-- processed/                    # Cleaned, standardized tables (CSV)
-|   `-- gold/                         # gold_market_daily and gold_signals_daily (Parquet)
+|   |-- gold/                         # gold_market_daily and gold_signals_daily (Parquet), frozen
+|   `-- live/                         # Post-freeze data, signals, monitor and data_status.json (auto-updated)
 |-- reports/                          # EDA, validation, calibration and sealed-test results, figures
 |-- pyproject.toml, uv.lock           # Locked environment (uv, Python 3.12)
 `-- requirements.txt                  # For Streamlit Community Cloud
@@ -108,6 +110,20 @@ Two coupled forecasting tasks + a transparent decision rule, always measured aga
 - **t+1 execution convention:** a signal computed after the close of day *t* is executed at *t+1*. The primary backtest executes at the close of *t+1* (earning the return of *t+2*); the shift-one-day variant is reported as a sensitivity, and conclusions are the same under both
 - Strict leakage controls: lag-only features, train-only statistics, forward-fill-only alignment, FRED yields lagged one trading day
 
+## Live data layer (after the freeze)
+
+The frozen vintage and the sealed test never change. On top of them, a daily job keeps the dashboard current:
+
+| Step | What happens |
+|---|---|
+| Fetch | Prices from Yahoo, then Tiingo (free key, `TIINGO_API_KEY`) if Yahoo fails; VIX from Yahoo, then FRED; DGS10/T10Y2Y from FRED. Retries with backoff. |
+| Validate | Only completed sessions; returns must match the stored history on the overlap; no absurd moves; all four assets share one calendar. Anything that fails is rejected. |
+| Fall back | If every source fails, the last good data stays and `data/live/data_status.json` says `fallback`. `current` and `delayed` (source not yet published) are the other states. |
+| Score | New signals use the pre-registered procedure (walk-forward refit every 21 days, frozen thresholds). Models are scored, not retrained; the forecast for the last frozen origin is reproduced exactly. |
+| Monitor | Live coverage, QLIKE vs the rolling baseline and a `watch` flag, in `reports/live_monitoring.md` (needs 20 realized forecasts before it judges). |
+
+Post-freeze rows are labelled `post_freeze` (realized) and `live` (next session) and are never mixed into the sealed-test metrics. The graded EDA and thresholds are untouched. Run it by hand with `uv run python -m risklens.live_pipeline`; the GitHub Action does the same and commits `data/live/` and `reports/live_monitoring.md`.
+
 ## Data sources (all open & free)
 
 - **Yahoo Finance** (`yfinance`) — daily OHLCV for SPY, AAPL, MSFT, JPM; VIX
@@ -132,6 +148,7 @@ uv run python -m risklens.run_validation && uv run python -m risklens.calibrate
 uv run python -m risklens.run_test      # SPY: needs tag preregistered-v1 and unchanged frozen files
 uv run python -m risklens.extension     # AAPL, MSFT, JPM: validation and calibration (validation data only)
 uv run python -m risklens.run_test --extension   # their sealed test: needs tag preregistered-v2
+uv run python -m risklens.live_pipeline   # refresh live data, signals and monitoring
 uv run streamlit run app/streamlit_app.py
 uv run pytest
 ```
