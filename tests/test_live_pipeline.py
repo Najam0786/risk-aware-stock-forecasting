@@ -344,3 +344,13 @@ def test_monitor_flags_poor_calibration_only_with_enough_forecasts():
     short = mon.ticker_metrics(rows.iloc[:5], wild[:5], np.full(5, 0.02**2))
     assert short["status"] == "insufficient_data"
     assert mon.ticker_metrics(rows.iloc[:0], wild[:0], wild[:0])["status"] == "insufficient_data"
+
+
+def test_app_recovers_from_a_stale_dashboard_module(monkeypatch):
+    from streamlit.testing.v1 import AppTest
+
+    monkeypatch.delattr(dd, "data_fingerprint")
+    app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
+    assert not app.exception
+    assert hasattr(dd, "data_fingerprint")
+    assert any("RiskLens" in m.value for m in app.markdown)

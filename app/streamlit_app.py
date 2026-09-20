@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib
 import sys
 from datetime import date
 from pathlib import Path
@@ -13,6 +14,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from risklens import charts as ch  # noqa: E402
 from risklens import dashboard_data as dd  # noqa: E402
+
+if not hasattr(dd, "data_fingerprint"):
+    dd = importlib.reload(dd)
 
 st.set_page_config(page_title="RiskLens", layout="wide", initial_sidebar_state="collapsed")
 
@@ -108,6 +112,13 @@ def choose_asset() -> None:
     st.session_state.pop("run_date", None)
     st.session_state.pop("date_pick", None)
 
+
+if not hasattr(dd, "data_fingerprint"):
+    st.error(
+        f"The server loaded an outdated dashboard_data module ({dd.__file__}). "
+        "Reboot the app from Manage app."
+    )
+    st.stop()
 
 ticker = st.session_state.get("ticker", "SPY")
 try:
