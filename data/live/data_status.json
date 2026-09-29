@@ -1,11 +1,11 @@
 {
-  "checked_at": "2026-09-29T16:24:58+00:00",
-  "last_successful_fetch_at": "2026-09-29T16:24:58+00:00",
+  "checked_at": "2026-09-29T16:36:30+00:00",
+  "last_successful_fetch_at": "2026-09-29T16:36:30+00:00",
   "state": "current",
   "last_close": "2026-09-28",
   "expected_last_session": "2026-09-28",
   "sessions_behind": 0,
-  "new_price_rows": 6,
+  "new_price_rows": 0,
   "backup_used": false,
   "components": {
     "prices": {
@@ -19,7 +19,8 @@
     },
     "vix": {
       "ok": true,
-      "source": "yahoo"
+      "source": "yahoo",
+      "last_date": "2026-09-28"
     },
     "macro": {
       "ok": true
