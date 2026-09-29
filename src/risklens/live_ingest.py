@@ -350,7 +350,9 @@ def refresh(
         vix_start,
     )
     errors += errs
+    vix_last = vix_reference.index.max()
     if vix_new is not None and len(vix_new):
+        vix_last = max(vix_last, vix_new.index.max())
         stored = (
             pd.read_csv(live_dir / VIX_FILE, parse_dates=["date"])
             if (live_dir / VIX_FILE).exists()
@@ -414,7 +416,11 @@ def refresh(
         "backup_used": bool(errors) and not failed,
         "components": {
             "prices": {"ok": prices_ok, "sources": price_sources},
-            "vix": {"ok": vix_new is not None, "source": vix_name},
+            "vix": {
+                "ok": vix_new is not None,
+                "source": vix_name,
+                "last_date": f"{vix_last:%Y-%m-%d}",
+            },
             "macro": {"ok": macro_ok},
         },
         "errors": errors,

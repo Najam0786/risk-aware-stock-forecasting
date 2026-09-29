@@ -107,3 +107,15 @@ def test_strategy_note_flags_a_degenerate_rule() -> None:
     assert "not evidence of timing skill" in note
     spy_note = dd.strategy_note(dd.load_dashboard_data(ROOT, "SPY"))
     assert "not met" in spy_note
+
+
+def test_data_health_reports_the_live_vix_date(data: dd.DashboardData) -> None:
+    status = {
+        "state": "current",
+        "last_close": "2026-09-28",
+        "components": {"vix": {"ok": True, "source": "yahoo", "last_date": "2026-09-28"}},
+    }
+    rows = {r["label"]: r["detail"] for r in dd.data_health(data.vintage, data.ticker, status)}
+    assert rows["VIX (^VIX)"] == "to 2026-09-28"
+    frozen = {r["label"]: r["detail"] for r in dd.data_health(data.vintage, data.ticker)}
+    assert frozen["VIX (^VIX)"] == f"to {data.vintage['files']['vix.csv']['last_date']}"

@@ -270,7 +270,11 @@ def test_vix_falls_back_to_fred_and_records_the_source(raw_dir, live_dir):
     stored = pd.read_csv(live_dir / li.VIX_FILE, parse_dates=["date"])
     assert stored["source"].unique().tolist() == ["fred"]
     assert stored["date"].max() == pd.Timestamp("2026-09-15")
-    assert status["components"]["vix"] == {"ok": True, "source": "fred"}
+    assert status["components"]["vix"] == {
+        "ok": True,
+        "source": "fred",
+        "last_date": "2026-09-15",
+    }
 
 
 def test_macro_series_are_stored_side_by_side(raw_dir, live_dir):

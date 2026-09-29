@@ -225,6 +225,7 @@ def build_explanation(ctx: dict) -> str:
 def data_health(vintage: dict, ticker: str = "SPY", status: dict | None = None) -> list[dict]:
     files = vintage["files"]
     prices = files[f"prices_{ticker}.csv"]
+    vix_last = files["vix.csv"]["last_date"]
     rows = []
     if status:
         rows.append(
@@ -234,9 +235,10 @@ def data_health(vintage: dict, ticker: str = "SPY", status: dict | None = None) 
                 "status": "ok" if status["state"] == "current" else "warn",
             }
         )
+        vix_last = status["components"]["vix"].get("last_date", vix_last)
     rows += [
         {"label": "Prices (Yahoo)", "detail": f"{prices['rows']:,} rows", "status": "ok"},
-        {"label": "VIX (^VIX)", "detail": f"to {files['vix.csv']['last_date']}", "status": "ok"},
+        {"label": "VIX (^VIX)", "detail": f"to {vix_last}", "status": "ok"},
         {
             "label": "FRED DGS10 / T10Y2Y",
             "detail": "lagged 1 trading day",
