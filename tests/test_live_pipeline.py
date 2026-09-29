@@ -179,7 +179,10 @@ def test_forecast_for_the_last_frozen_origin_is_unchanged_by_later_data(project)
         new = signals[(signals["ticker"] == ticker) & (signals["date"] == FROZEN_LIVE_TARGET)]
         old = frozen[(frozen["ticker"] == ticker) & (frozen["split"] == "live")]
         for field in NUMERIC_FIELDS:
-            assert float(new[field].iloc[0]) == pytest.approx(float(old[field].iloc[0]), abs=1e-12)
+            # GARCH optimizer output differs ~1e-7 relative between the Windows build and Linux runners
+            assert float(new[field].iloc[0]) == pytest.approx(
+                float(old[field].iloc[0]), rel=1e-5, abs=1e-9
+            )
         assert new["signal"].iloc[0] == old["signal"].iloc[0]
         assert new["train_end_date"].iloc[0] == old["train_end_date"].iloc[0]
 
