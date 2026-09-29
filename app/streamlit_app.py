@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib
 import sys
 from datetime import date
 from pathlib import Path
@@ -12,11 +11,22 @@ import streamlit as st
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+
+def source_stamp() -> int:
+    return max(p.stat().st_mtime_ns for p in (ROOT / "src" / "risklens").glob("*.py"))
+
+
+# Streamlit only unloads edited modules for sessions open while the files change, so code
+# pulled on Streamlit Cloud while nobody was connected would keep running the old version.
+stamp = source_stamp()
+if getattr(sys.modules.get("risklens"), "source_stamp", None) != stamp:
+    for name in [n for n in sys.modules if n == "risklens" or n.startswith("risklens.")]:
+        del sys.modules[name]
+
 from risklens import charts as ch  # noqa: E402
 from risklens import dashboard_data as dd  # noqa: E402
 
-if not hasattr(dd, "data_fingerprint"):
-    dd = importlib.reload(dd)
+sys.modules["risklens"].source_stamp = stamp
 
 st.set_page_config(page_title="RiskLens", layout="wide", initial_sidebar_state="collapsed")
 
@@ -112,13 +122,6 @@ def choose_asset() -> None:
     st.session_state.pop("run_date", None)
     st.session_state.pop("date_pick", None)
 
-
-if not hasattr(dd, "data_fingerprint"):
-    st.error(
-        f"The server loaded an outdated dashboard_data module ({dd.__file__}). "
-        "Reboot the app from Manage app."
-    )
-    st.stop()
 
 ticker = st.session_state.get("ticker", "SPY")
 try:
