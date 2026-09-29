@@ -1,11 +1,11 @@
 {
-  "checked_at": "2026-09-20T11:40:20+00:00",
-  "last_successful_fetch_at": "2026-09-20T11:40:20+00:00",
+  "checked_at": "2026-09-29T16:24:58+00:00",
+  "last_successful_fetch_at": "2026-09-29T16:24:58+00:00",
   "state": "current",
-  "last_close": "2026-09-18",
-  "expected_last_session": "2026-09-18",
+  "last_close": "2026-09-28",
+  "expected_last_session": "2026-09-28",
   "sessions_behind": 0,
-  "new_price_rows": 0,
+  "new_price_rows": 6,
   "backup_used": false,
   "components": {
     "prices": {
