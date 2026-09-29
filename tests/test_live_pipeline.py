@@ -4,6 +4,7 @@ import dataclasses
 import hashlib
 import json
 import shutil
+import sys
 from bisect import bisect_left
 from datetime import UTC, datetime
 from pathlib import Path
@@ -295,14 +296,27 @@ def test_fingerprint_changes_when_the_live_layer_is_rewritten(project, tmp_path)
         target.write_bytes(original)
 
 
+def keep_risklens_modules(monkeypatch: pytest.MonkeyPatch, stamp: int) -> None:
+    """Restore sys.modules afterwards and preset the stamp the app compares its sources with."""
+    for name in [n for n in sys.modules if n == "risklens" or n.startswith("risklens.")]:
+        monkeypatch.setitem(sys.modules, name, sys.modules[name])
+    monkeypatch.setattr(sys.modules["risklens"], "source_stamp", stamp, raising=False)
+
+
+def source_stamp() -> int:
+    return max(p.stat().st_mtime_ns for p in (ROOT / "src" / "risklens").glob("*.py"))
+
+
 def test_app_renders_with_the_live_layer(project, monkeypatch):
     from streamlit.testing.v1 import AppTest
 
-    original = dd.load_dashboard_data
+    keep_risklens_modules(monkeypatch, source_stamp())
+    app_dd = sys.modules["risklens.dashboard_data"]
+    original = app_dd.load_dashboard_data
     monkeypatch.setattr(
-        dd, "load_dashboard_data", lambda root, ticker: original(project.root, ticker)
+        app_dd, "load_dashboard_data", lambda root, ticker: original(project.root, ticker)
     )
-    monkeypatch.setattr(dd, "data_fingerprint", lambda root=None: ("synthetic-live",))
+    monkeypatch.setattr(app_dd, "data_fingerprint", lambda root=None: ("synthetic-live",))
     app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
     assert not app.exception
     text = " ".join(m.value for m in app.markdown)
@@ -349,11 +363,13 @@ def test_monitor_flags_poor_calibration_only_with_enough_forecasts():
     assert mon.ticker_metrics(rows.iloc[:0], wild[:0], wild[:0])["status"] == "insufficient_data"
 
 
-def test_app_recovers_from_a_stale_dashboard_module(monkeypatch):
+def test_app_reimports_risklens_after_its_source_changed(monkeypatch):
     from streamlit.testing.v1 import AppTest
 
+    keep_risklens_modules(monkeypatch, stamp=0)
     monkeypatch.delattr(dd, "data_fingerprint")
     app = AppTest.from_file(str(ROOT / "app" / "streamlit_app.py"), default_timeout=180).run()
     assert not app.exception
-    assert hasattr(dd, "data_fingerprint")
+    assert sys.modules["risklens.dashboard_data"] is not dd
+    assert sys.modules["risklens"].source_stamp == source_stamp()
     assert any("RiskLens" in m.value for m in app.markdown)
