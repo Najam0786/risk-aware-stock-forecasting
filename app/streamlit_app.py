@@ -149,9 +149,10 @@ head_a.markdown(
 )
 head_b.markdown(
     f'<span class="tape">{ticker} <b>{last_market["adj_close"]:,.2f}</b> &nbsp;|&nbsp; '
-    f"VIX <b>{last_market['vix_close']:.2f}</b> &nbsp;|&nbsp; "
+    f"VIX <b>{last_market['vix_close']:.2f}</b> "
+    f'<span class="muted">(as of {data.market.index[-1]:%d %b %Y})</span> &nbsp;|&nbsp; '
     f"10Y <b>{last_market['dgs10']:.2f}%</b> "
-    f'<span class="muted">(as of {data.market.index[-1]:%d %b %Y})</span></span>',
+    f'<span class="muted">(as of {dd.yield_as_of(data.market):%d %b %Y})</span></span>',
     unsafe_allow_html=True,
 )
 head_c.markdown(

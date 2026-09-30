@@ -109,6 +109,16 @@ def test_strategy_note_flags_a_degenerate_rule() -> None:
     assert "not met" in spy_note
 
 
+def test_yield_date_is_the_session_the_fred_value_was_published_for() -> None:
+    raw = pd.read_csv(ROOT / "data" / "raw" / "fred_dgs10.csv", na_values=["."])
+    raw = raw.set_index(pd.to_datetime(raw["observation_date"]))["DGS10"]
+    gold = pd.read_parquet(ROOT / "data" / "gold" / "gold_market_daily.parquet")
+    market = gold[gold["ticker"] == "SPY"].set_index("date").sort_index()
+    as_of = dd.yield_as_of(market)
+    assert as_of == market.index[-2]
+    assert market["dgs10"].iloc[-1] == pytest.approx(raw.loc[as_of])
+
+
 def test_data_health_reports_the_live_vix_date(data: dd.DashboardData) -> None:
     status = {
         "state": "current",

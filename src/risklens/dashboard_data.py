@@ -7,6 +7,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from risklens.clean import FRED_LAG_DAYS
+
 ROOT = Path(__file__).resolve().parents[2]
 ANNUALIZE = float(np.sqrt(252))
 BAND_SUFFIX = {0.50: "_50", 0.80: "_80", 0.95: ""}
@@ -220,6 +222,11 @@ def build_explanation(ctx: dict) -> str:
         f"that risk: {rule_text}. On the sealed test the 95% ranges covered "
         f"{ctx['coverage_pct']:.1f}% of outcomes (target 95%)."
     )
+
+
+def yield_as_of(market: pd.DataFrame) -> pd.Timestamp:
+    """Session the latest FRED yields belong to: the gold table stores them FRED_LAG_DAYS late."""
+    return market.index[-1 - FRED_LAG_DAYS]
 
 
 def data_health(vintage: dict, ticker: str = "SPY", status: dict | None = None) -> list[dict]:
