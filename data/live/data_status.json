@@ -1,34 +1,30 @@
 {
-  "checked_at": "2026-10-01T01:27:20+00:00",
-  "last_successful_fetch_at": "2026-09-30T01:28:17+00:00",
-  "state": "fallback",
-  "last_close": "2026-09-29",
-  "expected_last_session": "2026-09-30",
-  "sessions_behind": 1,
-  "new_price_rows": 0,
+  "checked_at": "2026-10-02T01:46:57+00:00",
+  "last_successful_fetch_at": "2026-10-02T01:46:57+00:00",
+  "state": "current",
+  "last_close": "2026-10-01",
+  "expected_last_session": "2026-10-01",
+  "sessions_behind": 0,
+  "new_price_rows": 2,
   "backup_used": false,
   "components": {
     "prices": {
-      "ok": false,
-      "sources": {}
+      "ok": true,
+      "sources": {
+        "SPY": "yahoo",
+        "AAPL": "yahoo",
+        "MSFT": "yahoo",
+        "JPM": "yahoo"
+      }
     },
     "vix": {
       "ok": true,
       "source": "yahoo",
-      "last_date": "2026-09-30"
+      "last_date": "2026-10-01"
     },
     "macro": {
       "ok": true
     }
   },
-  "errors": [
-    "SPY via yahoo: non-finite values",
-    "SPY via tiingo: TIINGO_API_KEY is not set",
-    "AAPL via yahoo: non-finite values",
-    "AAPL via tiingo: TIINGO_API_KEY is not set",
-    "MSFT via yahoo: non-finite values",
-    "MSFT via tiingo: TIINGO_API_KEY is not set",
-    "JPM via yahoo: non-finite values",
-    "JPM via tiingo: TIINGO_API_KEY is not set"
-  ]
+  "errors": []
 }
