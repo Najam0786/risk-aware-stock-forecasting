@@ -1,10 +1,10 @@
 {
-  "checked_at": "2026-10-21T00:49:05+00:00",
+  "checked_at": "2026-10-22T00:50:39+00:00",
   "last_successful_fetch_at": "2026-10-16T00:39:22+00:00",
   "state": "fallback",
   "last_close": "2026-10-15",
-  "expected_last_session": "2026-10-20",
-  "sessions_behind": 3,
+  "expected_last_session": "2026-10-21",
+  "sessions_behind": 4,
   "new_price_rows": 0,
   "backup_used": false,
   "components": {
@@ -15,10 +15,10 @@
     "vix": {
       "ok": true,
       "source": "yahoo",
-      "last_date": "2026-10-20"
+      "last_date": "2026-10-21"
     },
     "macro": {
-      "ok": true
+      "ok": false
     }
   },
   "errors": [
@@ -29,6 +29,8 @@
     "MSFT via yahoo: non-finite values",
     "MSFT via tiingo: TIINGO_API_KEY is not set",
     "JPM via yahoo: non-finite values",
-    "JPM via tiingo: TIINGO_API_KEY is not set"
+    "JPM via tiingo: TIINGO_API_KEY is not set",
+    "DGS10 via fred: ValueError: Missing column provided to 'parse_dates': 'observation_date'",
+    "T10Y2Y via fred: ValueError: Missing column provided to 'parse_dates': 'observation_date'"
   ]
 }
