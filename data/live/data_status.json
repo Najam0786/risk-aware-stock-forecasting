@@ -1,9 +1,9 @@
 {
-  "checked_at": "2026-11-20T03:40:43+00:00",
-  "last_successful_fetch_at": "2026-11-20T03:40:43+00:00",
+  "checked_at": "2026-11-21T03:24:00+00:00",
+  "last_successful_fetch_at": "2026-11-21T03:24:00+00:00",
   "state": "current",
-  "last_close": "2026-11-19",
-  "expected_last_session": "2026-11-19",
+  "last_close": "2026-11-20",
+  "expected_last_session": "2026-11-20",
   "sessions_behind": 0,
   "new_price_rows": 1,
   "backup_used": false,
@@ -20,7 +20,7 @@
     "vix": {
       "ok": true,
       "source": "yahoo",
-      "last_date": "2026-11-19"
+      "last_date": "2026-11-20"
     },
     "macro": {
       "ok": true
